@@ -1,0 +1,50 @@
+# Robots.txt для сайта автобетононасосов SANY
+
+User-agent: *
+Allow: /
+
+# Основные страницы
+Allow: /
+Allow: /#gallery
+Allow: /#catalog
+Allow: /#contact
+
+# Изображения
+Allow: /images/
+Allow: /public/images/
+
+# Статические файлы
+Allow: /_next/static/
+Allow: /favicon.ico
+
+# Запрещаем индексацию служебных файлов
+Disallow: /api/
+Disallow: /_next/
+Disallow: /admin/
+
+# Sitemap
+Sitemap: https://v0-avtobetononasos.vercel.app/sitemap.xml
+Sitemap: https://v0-avtobetononasos.vercel.app/sitemap.xml
+
+# Время задержки для ботов (в секундах)
+Crawl-delay: 1
+
+# Специальные настройки для Яндекса
+User-agent: Yandex
+Allow: /
+Crawl-delay: 2
+
+# Специальные настройки для Google
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 1
+
+# Запрещаем плохих ботов
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: MJ12bot
+Disallow: /
+
+User-agent: DotBot
+Disallow: /
