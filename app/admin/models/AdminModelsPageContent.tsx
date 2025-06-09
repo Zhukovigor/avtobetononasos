@@ -135,17 +135,37 @@ export default function AdminModelsPageContent() {
       setIsLoading(true)
       setError("")
 
+      console.log("🔄 Загрузка моделей...")
       const response = await fetch("/api/models")
-      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+      }
+
+      const text = await response.text()
+      console.log("📄 Ответ сервера:", text.substring(0, 200) + "...")
+
+      if (!text.trim()) {
+        throw new Error("Пустой ответ от сервера")
+      }
+
+      let result
+      try {
+        result = JSON.parse(text)
+      } catch (parseError) {
+        console.error("❌ Ошибка парсинга JSON:", parseError)
+        throw new Error("Неверный формат ответа от сервера")
+      }
 
       if (result.success && Array.isArray(result.data)) {
+        console.log("✅ Модели загружены:", result.data.length)
         setModels(result.data)
       } else {
         throw new Error(result.error || "Неверный формат данных")
       }
     } catch (error) {
-      console.error("Ошибка загрузки моделей:", error)
-      setError("Ошибка загрузки моделей. Попробуйте обновить страницу.")
+      console.error("❌ Ошибка загрузки моделей:", error)
+      setError(`Ошибка загрузки моделей: ${error instanceof Error ? error.message : "Неизвестная ошибка"}`)
       setModels([])
     } finally {
       setIsLoading(false)
@@ -158,17 +178,29 @@ export default function AdminModelsPageContent() {
 
     setIsLoading(true)
     try {
+      console.log("🔄 Загрузка модели:", modelId)
       const response = await fetch(`/api/models?id=${modelId}`)
-      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+      }
+
+      const text = await response.text()
+      if (!text.trim()) {
+        throw new Error("Пустой ответ от сервера")
+      }
+
+      const result = JSON.parse(text)
       if (result.success) {
+        console.log("✅ Модель загружена:", result.data.title)
         setModelData(result.data)
         setIsEditing(true)
       } else {
         throw new Error(result.error || "Модель не найдена")
       }
     } catch (error) {
-      console.error("Ошибка загрузки модели:", error)
-      setError("Ошибка загрузки модели")
+      console.error("❌ Ошибка загрузки модели:", error)
+      setError(`Ошибка загрузки модели: ${error instanceof Error ? error.message : "Неизвестная ошибка"}`)
     } finally {
       setIsLoading(false)
     }
@@ -186,14 +218,40 @@ export default function AdminModelsPageContent() {
     setError("")
 
     try {
+      console.log("💾 Сохранение модели:", modelData.title)
+
       const method = modelData.id && selectedModelId ? "PUT" : "POST"
       const response = await fetch("/api/models", {
         method,
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify(modelData),
       })
 
-      const result = await response.json()
+      console.log("📡 Ответ сервера:", response.status, response.statusText)
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error("❌ Ошибка HTTP:", errorText)
+        throw new Error(`HTTP ${response.status}: ${errorText}`)
+      }
+
+      const text = await response.text()
+      console.log("📄 Тело ответа:", text.substring(0, 200) + "...")
+
+      if (!text.trim()) {
+        throw new Error("Пустой ответ от сервера")
+      }
+
+      let result
+      try {
+        result = JSON.parse(text)
+      } catch (parseError) {
+        console.error("❌ Ошибка парсинга JSON:", parseError)
+        throw new Error("Неверный формат ответа от сервера")
+      }
+
       if (result.success) {
         console.log("✅ Модель успешно сохранена!")
         await fetchModels()
@@ -383,7 +441,7 @@ export default function AdminModelsPageContent() {
                     </div>
                     <div>
                       <p className="text-gray-400 text-sm">Макс. высота</p>
-                      <p className="text-2xl font-bold text-white">75м</p>
+                      <p className="text-2xl font-bold text-white">86м</p>
                     </div>
                   </div>
                 </CardContent>
@@ -397,7 +455,7 @@ export default function AdminModelsPageContent() {
                     </div>
                     <div>
                       <p className="text-gray-400 text-sm">Макс. производительность</p>
-                      <p className="text-2xl font-bold text-white">220 м³/ч</p>
+                      <p className="text-2xl font-bold text-white">200 м³/ч</p>
                     </div>
                   </div>
                 </CardContent>
@@ -411,7 +469,7 @@ export default function AdminModelsPageContent() {
                     </div>
                     <div>
                       <p className="text-gray-400 text-sm">Диапазон массы</p>
-                      <p className="text-2xl font-bold text-white">28-55т</p>
+                      <p className="text-2xl font-bold text-white">37-75т</p>
                     </div>
                   </div>
                 </CardContent>
