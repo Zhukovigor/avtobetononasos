@@ -2,12 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { Edit3 } from "lucide-react"
-import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/hooks/use-toast"
-import { useAdminAuth } from "../hooks/useAdminAuth"
-import ModelEditModal from "./model-edit-modal"
-import { Button } from "@/components/ui/button"
 
 interface Model {
   id: string
@@ -23,144 +18,56 @@ interface Model {
   }
   description: string
   features: string[]
+  isVisible?: boolean
+  order?: number
 }
 
-const models: Model[] = [
-  {
-    id: "sany-530s",
-    name: "SANY SYG5530THB-62",
-    category: "Стационарные",
-    price: "Цена по запросу",
-    image: "/images/pump1.jpg",
-    specs: {
-      reach: "62 м",
-      output: "180 м³/ч",
-      engine: "Weichai 375 л.с.",
-      weight: "53 т",
-    },
-    description: "Высокопроизводительный автобетононасос для крупных строительных объектов",
-    features: ["Высокая надежность", "Экономичный расход топлива", "Простое обслуживание"],
-  },
-  {
-    id: "sany-370c-10",
-    name: "SANY SYG5370THB-52",
-    category: "Мобильные",
-    price: "Цена по запросу",
-    image: "/images/pump2.jpg",
-    specs: {
-      reach: "52 м",
-      output: "160 м³/ч",
-      engine: "Weichai 336 л.с.",
-      weight: "37 т",
-    },
-    description: "Универсальный автобетононасос для средних и крупных объектов",
-    features: ["Компактные размеры", "Высокая маневренность", "Надежная конструкция"],
-  },
-  {
-    id: "sany-710s",
-    name: "SANY SYG5710THB-86",
-    category: "Стационарные",
-    price: "Цена по запросу",
-    image: "/images/pump3.jpg",
-    specs: {
-      reach: "86 м",
-      output: "200 м³/ч",
-      engine: "Weichai 420 л.с.",
-      weight: "71 т",
-    },
-    description: "Мощный автобетононасос для высотного строительства",
-    features: ["Максимальная высота подачи", "Высокая производительность", "Премиум качество"],
-  },
-  {
-    id: "sany-750s",
-    name: "SANY SYG5750THB-72",
-    category: "Стационарные",
-    price: "Цена по запросу",
-    image: "/images/pump4.jpg",
-    specs: {
-      reach: "72 м",
-      output: "190 м³/ч",
-      engine: "Weichai 395 л.с.",
-      weight: "75 т",
-    },
-    description: "Профессиональный автобетононасос для сложных проектов",
-    features: ["Стабильная работа", "Низкий уровень шума", "Долговечность"],
-  },
-  {
-    id: "sany-680c-10",
-    name: "SANY SYG5680THB-58",
-    category: "Мобильные",
-    price: "Цена по запросу",
-    image: "/images/pump5.jpg",
-    specs: {
-      reach: "58 м",
-      output: "170 м³/ч",
-      engine: "Weichai 360 л.с.",
-      weight: "68 т",
-    },
-    description: "Сбалансированный автобетононасос для различных задач",
-    features: ["Оптимальное соотношение цена/качество", "Универсальность", "Простота управления"],
-  },
-  {
-    id: "sany-620c-10",
-    name: "SANY SYG5620THB-48",
-    category: "Мобильные",
-    price: "Цена по запросу",
-    image: "/images/pump6.jpg",
-    specs: {
-      reach: "48 м",
-      output: "150 м³/ч",
-      engine: "Weichai 310 л.с.",
-      weight: "62 т",
-    },
-    description: "Компактный автобетононасос для городского строительства",
-    features: ["Компактность", "Экономичность", "Быстрая окупаемость"],
-  },
-]
-
 export default function Portfolio() {
-  const { isAdmin, isLoading: adminLoading } = useAdminAuth()
-  const [editingModel, setEditingModel] = useState<any>(null)
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [forceUpdate, setForceUpdate] = useState(0)
   const { toast } = useToast()
 
   const [selectedCategory, setSelectedCategory] = useState<string>("Все")
-  const [filteredModels, setFilteredModels] = useState<Model[]>(models)
+  const [filteredModels, setFilteredModels] = useState<Model[]>([])
+  const [allModels, setAllModels] = useState<Model[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
   const categories = ["Все", "Стационарные", "Мобильные"]
 
+  // Загрузка данных с сервера
   useEffect(() => {
-    // Имитация загрузки
-    const timer = setTimeout(() => {
-      setIsLoading(false)
-    }, 800)
+    fetchModels()
+  }, [forceUpdate])
 
-    return () => clearTimeout(timer)
-  }, [])
+  const fetchModels = async () => {
+    try {
+      setIsLoading(true)
+      const response = await fetch("/api/portfolio-cards")
+      const result = await response.json()
+
+      if (result.success) {
+        setAllModels(result.data)
+        console.log("✅ Модели загружены:", result.data.length)
+      } else {
+        console.error("❌ Ошибка загрузки моделей:", result.error)
+        // Fallback к статическим данным
+        setAllModels([])
+      }
+    } catch (error) {
+      console.error("❌ Ошибка запроса:", error)
+      // Fallback к статическим данным
+      setAllModels([])
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   useEffect(() => {
     if (selectedCategory === "Все") {
-      setFilteredModels(models)
+      setFilteredModels(allModels)
     } else {
-      setFilteredModels(models.filter((model) => model.category === selectedCategory))
+      setFilteredModels(allModels.filter((model) => model.category === selectedCategory))
     }
-  }, [selectedCategory, forceUpdate])
-
-  const handleEditModel = (model: any) => {
-    setEditingModel(model)
-    setIsEditModalOpen(true)
-  }
-
-  const handleSaveModel = (updatedModel: any) => {
-    // Обновляем локальные данные
-    setForceUpdate((prev) => prev + 1)
-    toast({
-      title: "✅ Модель обновлена",
-      description: "Изменения сохранены успешно",
-    })
-  }
+  }, [selectedCategory, allModels])
 
   const handleWhatsAppClick = (modelName: string) => {
     // Отправляем событие в аналитику
@@ -218,19 +125,6 @@ export default function Portfolio() {
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">Купить автобетононасос</h2>
-          {/* Админ панель */}
-          {isAdmin && (
-            <div className="mb-8 p-4 bg-zinc-800 rounded-xl border border-zinc-700">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Badge variant="secondary">Режим администратора активен</Badge>
-                </div>
-              </div>
-              <p className="text-gray-400 text-sm mt-2">
-                Вы можете редактировать модели прямо на странице, нажав кнопку "Редактировать" на карточке модели.
-              </p>
-            </div>
-          )}
 
           <p className="text-xl text-gray-300 max-w-3xl mx-auto mb-8">
             Широкий выбор автобетононасосов SANY с прямой поставкой из Китая. Гарантия качества, лучшие цены, лизинг 0%.
@@ -309,19 +203,9 @@ export default function Portfolio() {
                 </div>
 
                 <div className="flex gap-3">
-                  {isAdmin && (
-                    <Button
-                      onClick={() => handleEditModel(model)}
-                      variant="outline"
-                      className="flex-1 border-yellow-600 text-yellow-600 hover:bg-yellow-600 hover:text-white"
-                    >
-                      <Edit3 className="w-4 h-4 mr-2" />
-                      Редактировать
-                    </Button>
-                  )}
                   <button
                     onClick={() => handleWhatsAppClick(model.name)}
-                    className={`${isAdmin ? "flex-1" : "flex-1"} bg-green-600 hover:bg-green-700 text-white py-4 px-4 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-green-600/25`}
+                    className="flex-1 bg-green-600 hover:bg-green-700 text-white py-4 px-4 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-green-600/25"
                   >
                     <span className="flex items-center justify-center gap-2">
                       <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -333,7 +217,7 @@ export default function Portfolio() {
                   <Link
                     href={`/models/${model.id}`}
                     onClick={() => handleViewSpecs(model.id)}
-                    className={`${isAdmin ? "flex-1" : "flex-1"} bg-blue-600 hover:bg-blue-700 text-white py-4 px-4 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-blue-600/25 text-center`}
+                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-4 px-4 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-blue-600/25 text-center"
                   >
                     Подробнее
                   </Link>
@@ -415,18 +299,6 @@ export default function Portfolio() {
             </div>
           </div>
         </div>
-        {/* Модальное окно редактирования */}
-        {editingModel && (
-          <ModelEditModal
-            model={editingModel}
-            isOpen={isEditModalOpen}
-            onClose={() => {
-              setIsEditModalOpen(false)
-              setEditingModel(null)
-            }}
-            onSave={handleSaveModel}
-          />
-        )}
       </div>
 
       <style jsx>{`
