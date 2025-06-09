@@ -2,6 +2,13 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
+import { Shield, Edit3 } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
+import { useToast } from "@/hooks/use-toast"
+import { useAdminAuth, logoutAdmin } from "../hooks/useAdminAuth"
+import ModelEditModal from "./model-edit-modal"
+import AdminLogin from "./admin-login"
+import { Button } from "@/components/ui/button"
 
 interface Model {
   id: string
@@ -113,6 +120,12 @@ const models: Model[] = [
 ]
 
 export default function Portfolio() {
+  const { isAdmin, isLoading: adminLoading } = useAdminAuth()
+  const [editingModel, setEditingModel] = useState<any>(null)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [forceUpdate, setForceUpdate] = useState(0)
+  const { toast } = useToast()
+
   const [selectedCategory, setSelectedCategory] = useState<string>("Все")
   const [filteredModels, setFilteredModels] = useState<Model[]>(models)
   const [isLoading, setIsLoading] = useState(true)
@@ -134,7 +147,25 @@ export default function Portfolio() {
     } else {
       setFilteredModels(models.filter((model) => model.category === selectedCategory))
     }
-  }, [selectedCategory])
+  }, [selectedCategory, forceUpdate])
+
+  const handleEditModel = (model: any) => {
+    setEditingModel(model)
+    setIsEditModalOpen(true)
+  }
+
+  const handleSaveModel = (updatedModel: any) => {
+    // Обновляем локальные данные
+    setForceUpdate((prev) => prev + 1)
+    toast({
+      title: "✅ Модель обновлена",
+      description: "Изменения сохранены успешно",
+    })
+  }
+
+  const handleAdminLoginSuccess = () => {
+    setForceUpdate((prev) => prev + 1)
+  }
 
   const handleWhatsAppClick = (modelName: string) => {
     // Отправляем событие в аналитику
@@ -192,6 +223,30 @@ export default function Portfolio() {
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">Купить автобетононасос</h2>
+          {/* Админ панель */}
+          {isAdmin && (
+            <div className="mb-8 p-4 bg-zinc-800 rounded-xl border border-zinc-700">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Shield className="w-5 h-5 text-green-400" />
+                  <span className="text-green-400 font-semibold">Режим администратора</span>
+                  <Badge variant="secondary">Активен</Badge>
+                </div>
+                <Button variant="outline" size="sm" onClick={logoutAdmin}>
+                  Выйти
+                </Button>
+              </div>
+              <p className="text-gray-400 text-sm mt-2">
+                Вы можете редактировать модели прямо на странице, нажав кнопку "Редактировать" на карточке модели.
+              </p>
+            </div>
+          )}
+
+          {!isAdmin && !adminLoading && (
+            <div className="mb-8 text-center">
+              <AdminLogin onLoginSuccess={handleAdminLoginSuccess} />
+            </div>
+          )}
           <p className="text-xl text-gray-300 max-w-3xl mx-auto mb-8">
             Широкий выбор автобетононасосов SANY с прямой поставкой из Китая. Гарантия качества, лучшие цены, лизинг 0%.
           </p>
@@ -269,9 +324,19 @@ export default function Portfolio() {
                 </div>
 
                 <div className="flex gap-3">
+                  {isAdmin && (
+                    <Button
+                      onClick={() => handleEditModel(model)}
+                      variant="outline"
+                      className="flex-1 border-yellow-600 text-yellow-600 hover:bg-yellow-600 hover:text-white"
+                    >
+                      <Edit3 className="w-4 h-4 mr-2" />
+                      Редактировать
+                    </Button>
+                  )}
                   <button
                     onClick={() => handleWhatsAppClick(model.name)}
-                    className="flex-1 bg-green-600 hover:bg-green-700 text-white py-4 px-4 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-green-600/25"
+                    className={`${isAdmin ? "flex-1" : "flex-1"} bg-green-600 hover:bg-green-700 text-white py-4 px-4 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-green-600/25`}
                   >
                     <span className="flex items-center justify-center gap-2">
                       <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -283,7 +348,7 @@ export default function Portfolio() {
                   <Link
                     href={`/models/${model.id}`}
                     onClick={() => handleViewSpecs(model.id)}
-                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-4 px-4 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-blue-600/25 text-center"
+                    className={`${isAdmin ? "flex-1" : "flex-1"} bg-blue-600 hover:bg-blue-700 text-white py-4 px-4 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-blue-600/25 text-center`}
                   >
                     Подробнее
                   </Link>
@@ -365,6 +430,18 @@ export default function Portfolio() {
             </div>
           </div>
         </div>
+        {/* Модальное окно редактирования */}
+        {editingModel && (
+          <ModelEditModal
+            model={editingModel}
+            isOpen={isEditModalOpen}
+            onClose={() => {
+              setIsEditModalOpen(false)
+              setEditingModel(null)
+            }}
+            onSave={handleSaveModel}
+          />
+        )}
       </div>
 
       <style jsx>{`
