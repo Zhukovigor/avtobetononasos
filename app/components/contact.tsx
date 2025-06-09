@@ -3,7 +3,6 @@
 import type React from "react"
 
 import { useState } from "react"
-import { useSettings } from "@/app/hooks/useSettings"
 
 declare global {
   interface Window {
@@ -13,7 +12,6 @@ declare global {
 }
 
 export default function Contact() {
-  const { settings } = useSettings()
   // Состояние формы
   const [formData, setFormData] = useState({
     name: "",
@@ -85,36 +83,6 @@ export default function Contact() {
     return isValid
   }
 
-  // Создание лида из формы контакта
-  const createLead = async (contactData: typeof formData) => {
-    try {
-      const response = await fetch("/api/leads", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: contactData.name,
-          email: contactData.email,
-          phone: contactData.phone,
-          message: contactData.message,
-          source: "Контактная форма",
-          priority: "medium",
-          tags: ["сайт", "контактная_форма"],
-        }),
-      })
-
-      const result = await response.json()
-      if (!result.success) {
-        console.error("Ошибка создания лида:", result.error)
-      } else {
-        console.log("Лид успешно создан:", result.data)
-      }
-    } catch (error) {
-      console.error("Ошибка при создании лида:", error)
-    }
-  }
-
   // Отправка формы
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -141,7 +109,7 @@ export default function Contact() {
       if (result.success) {
         // Отправляем событие в Яндекс.Метрику
         if (typeof window !== "undefined" && window.ym) {
-          window.ym(settings?.yandexMetrikaId || "102485605", "reachGoal", "form_submit", {
+          window.ym(102485605, "reachGoal", "form_submit", {
             name: formData.name,
             email: formData.email,
             phone: formData.phone,
@@ -156,9 +124,6 @@ export default function Contact() {
             value: 1,
           })
         }
-
-        // Создаем лид из данных формы
-        await createLead(formData)
 
         setIsSubmitted(true)
         setFormData({
@@ -182,7 +147,7 @@ export default function Contact() {
   const handleSocialClick = (platform: string) => {
     // Отправляем событие в Яндекс.Метрику
     if (typeof window !== "undefined" && window.ym) {
-      window.ym(settings?.yandexMetrikaId || "102485605", "reachGoal", `social_${platform}`)
+      window.ym(102485605, "reachGoal", `social_${platform}`)
     }
 
     // Отправляем событие в Google Analytics
@@ -219,7 +184,7 @@ export default function Contact() {
                     </div>
                     <div>
                       <p className="text-sm text-gray-400">Email</p>
-                      <p className="text-white">{settings?.contactEmail || "zhukovigor@mail.ru"}</p>
+                      <p className="text-white">zhukovigor@mail.ru</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-4">
@@ -228,7 +193,7 @@ export default function Contact() {
                     </div>
                     <div>
                       <p className="text-sm text-gray-400">Телефон</p>
-                      <p className="text-white">{settings?.contactPhone || "+7 (919) 042-24-92"}</p>
+                      <p className="text-white">+7 (919) 042-24-92</p>
                     </div>
                   </div>
                 </div>
@@ -238,7 +203,7 @@ export default function Contact() {
                 <h3 className="mb-6 text-2xl font-semibold text-white">Социальные сети</h3>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <a
-                    href={settings?.socialLinks?.whatsapp || "https://wa.me/79190422492"}
+                    href="https://wa.me/79190422492"
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={() => handleSocialClick("whatsapp")}
@@ -251,7 +216,7 @@ export default function Contact() {
                     </div>
                   </a>
                   <a
-                    href={settings?.socialLinks?.vk || "https://vk.com/sprostehnika"}
+                    href="https://vk.com/sprostehnika"
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={() => handleSocialClick("vk")}
@@ -264,7 +229,7 @@ export default function Contact() {
                     </div>
                   </a>
                   <a
-                    href={settings?.socialLinks?.telegram || "https://t.me/sany_global"}
+                    href="https://t.me/sany_global"
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={() => handleSocialClick("telegram")}
@@ -277,7 +242,7 @@ export default function Contact() {
                     </div>
                   </a>
                   <a
-                    href={settings?.socialLinks?.dzen || "https://dzen.ru/sprostehnika"}
+                    href="https://dzen.ru/sprostehnika"
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={() => handleSocialClick("dzen")}

@@ -1,20 +1,17 @@
-"use client"
-
-// Импортируем конфигурацию для отключения статической генерации
-import "./config"
-import { Suspense } from "react"
-import AdminDashboardContent from "./AdminDashboardContent"
+import ModelsStats from "./components/models-stats"
 
 export default function AdminPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="flex items-center justify-center h-[50vh]">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-white"></div>
-        </div>
-      }
-    >
-      <AdminDashboardContent />
-    </Suspense>
+    <div className="container mx-auto py-8">
+      <h1 className="text-3xl font-bold text-white mb-8">Admin Dashboard</h1>
+
+      {/* Existing cards or content can go here */}
+
+      {/* Статистика моделей */}
+      <div className="mb-8">
+        <h2 className="text-xl font-semibold text-white mb-4">📊 Статистика моделей</h2>
+        <ModelsStats />
+      </div>
+    </div>
   )
 }

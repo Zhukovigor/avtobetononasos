@@ -1,9 +1,6 @@
 import { NextResponse } from "next/server"
 import { headers } from "next/headers"
 
-// Принудительно делаем route динамическим
-export const dynamic = "force-dynamic"
-
 // Инициация OAuth 2.0 авторизации с Google
 export async function GET(request: Request) {
   try {
@@ -37,12 +34,12 @@ export async function GET(request: Request) {
     }
 
     // Параметры для авторизации Google Search Console
-    // ИЗМЕНЕНО: Запрашиваем только базовые разрешения для профиля
     const params = new URLSearchParams({
       client_id: clientId,
       redirect_uri: redirectUri,
       response_type: "code",
-      scope: "https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email",
+      scope:
+        "https://www.googleapis.com/auth/webmasters.readonly https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email",
       access_type: "offline",
       prompt: "consent",
       state: "seo-monitor", // Для безопасности

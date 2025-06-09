@@ -1,23 +1,19 @@
 import "@/styles/globals.css"
 import { Inter } from "next/font/google"
 import type React from "react"
-import type { Metadata } from "next"
-import { ModelDataProvider } from "./components/model-data-provider"
 
 const inter = Inter({ subsets: ["latin"] })
 
-export const metadata: Metadata = {
-  title: "Автобетононасосы SANY - продажа, аренда, сервис",
+export const metadata = {
+  title: "Автобетононасосы SANY - Продажа и поставка из Китая",
   description:
-    "Официальный дилер SANY в России. Продажа автобетононасосов, запчасти, сервисное обслуживание. Гарантия, лизинг, быстрая доставка.",
-  keywords: "автобетононасос, SANY, купить, аренда, сервис, запчасти, лизинг",
-  authors: [{ name: "SANY Russia" }],
+    "Продажа автобетононасосов SANY с прямой поставкой из Китая. Официальный поставщик. Выгодные цены. Доставка по России. Лизинг.",
+  keywords: "автобетононасос, SANY, продажа, поставка из Китая, бетононасос, строительная техника",
   robots: "index, follow",
-  openGraph: {
-    title: "Автобетононасосы SANY - официальный дилер",
-    description: "Продажа автобетононасосов SANY с гарантией. Лизинг, сервис, запчасти.",
-    type: "website",
-    locale: "ru_RU",
+  author: "Автобетононасосы SANY",
+  viewport: "width=device-width, initial-scale=1",
+  alternates: {
+    canonical: "https://v0-avtobetononasos.vercel.app",
   },
     generator: 'v0.dev'
 }
@@ -42,6 +38,46 @@ export default function RootLayout({
             `,
           }}
         />
+
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="robots" content="index, follow" />
+        <meta name="author" content="Автобетононасосы SANY" />
+
+        {/* Open Graph метатеги */}
+        <meta property="og:title" content="Автобетононасосы SANY - Продажа и поставка из Китая" />
+        <meta
+          property="og:description"
+          content="Продажа автобетононасосов SANY с прямой поставкой из Китая. Официальный поставщик."
+        />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://v0-avtobetononasos.vercel.app" />
+        <meta property="og:image" content="https://v0-avtobetononasos.vercel.app/images/pump1.jpg" />
+        <meta property="og:locale" content="ru_RU" />
+        <meta property="og:site_name" content="Автобетононасосы SANY" />
+
+        {/* Twitter Card метатеги */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Автобетононасосы SANY - Продажа и поставка из Китая" />
+        <meta
+          name="twitter:description"
+          content="Продажа автобетононасосов SANY с прямой поставкой из Китая. Официальный поставщик."
+        />
+        <meta name="twitter:image" content="https://v0-avtobetononasos.vercel.app/images/pump1.jpg" />
+
+        {/* Дополнительные SEO метатеги */}
+        <meta name="geo.region" content="RU" />
+        <meta name="geo.placename" content="Россия" />
+        <meta name="language" content="Russian" />
+
+        {/* Канонический URL */}
+        <link rel="canonical" href="https://v0-avtobetononasos.vercel.app" />
+
+        {/* Альтернативные языки (если будут) */}
+        <link rel="alternate" hrefLang="ru" href="https://v0-avtobetononasos.vercel.app" />
+
+        {/* Favicon */}
+        <link rel="icon" href="/favicon.ico" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 
         {/* Yandex.Metrika counter */}
         <script
@@ -115,7 +151,7 @@ export default function RootLayout({
         />
       </head>
       <body className={inter.className}>
-        <ModelDataProvider>{children}</ModelDataProvider>
+        {children}
 
         <noscript>
           <div>

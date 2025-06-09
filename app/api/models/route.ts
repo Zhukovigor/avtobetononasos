@@ -1,306 +1,599 @@
 import { NextResponse } from "next/server"
+import { writeFile, readFile, mkdir } from "fs/promises"
+import { existsSync } from "fs"
+import path from "path"
 
-// Принудительно делаем route динамическим
-export const dynamic = "force-dynamic"
+// Интерфейс для данных модели
+interface ModelData {
+  id: string
+  model: string
+  title: string
+  subtitle: string
+  image: string
+  keySpecs: {
+    height: string
+    performance: string
+    reach: string
+    weight: string
+  }
+  specifications: {
+    general: Array<{
+      label: string
+      value: string
+      highlight?: boolean
+    }>
+    boom: Array<{
+      label: string
+      value: string
+      highlight?: boolean
+    }>
+    pump: Array<{
+      label: string
+      value: string
+      highlight?: boolean
+    }>
+    chassis: Array<{
+      label: string
+      value: string
+      highlight?: boolean
+    }>
+  }
+  features: string[]
+  advantages: string[]
+  delivery: {
+    location: string
+    term: string
+    warranty: string
+    payment: string
+  }
+}
 
-// Статические данные моделей
-const modelsData = [
+// Путь к файлу с данными
+const DATA_DIR = path.join(process.cwd(), "data")
+const MODELS_FILE = path.join(DATA_DIR, "models.json")
+
+// Начальные данные моделей
+const initialModels: ModelData[] = [
   {
     id: "sany-530s",
     model: "SANY SYM5365THBFS 530S",
-    title: "Автобетононасос SANY 530S",
-    subtitle: "Высота подачи 53 метра",
+    title: "SANY SYM5365THBFS 530S",
+    subtitle: "Автобетононасос с высотой подачи 53 метра",
     image: "/images/pump1.jpg",
     keySpecs: {
-      height: "53 м",
+      height: "53м",
       performance: "180 м³/ч",
-      reach: "49 м",
+      reach: "48.5м",
       weight: "36 500 кг",
     },
-    category: "medium",
-    slug: "sany-530s",
-    specs: "Высота подачи: 53м, Производительность: 180 м³/ч",
-    price: "от 18 500 000 ₽",
+    specifications: {
+      general: [
+        { label: "Длина", value: "14 500 мм", highlight: false },
+        { label: "Ширина", value: "2 500 мм", highlight: false },
+        { label: "Высота", value: "4 000 мм", highlight: false },
+        { label: "Масса", value: "36 500 кг", highlight: true },
+      ],
+      boom: [
+        { label: "Вертикальный вылет", value: "53.0 м", highlight: true },
+        { label: "Горизонтальный вылет", value: "48.5 м", highlight: true },
+        { label: "Глубина подачи", value: "38.5 м", highlight: false },
+        { label: "Минимальный радиус", value: "7.5 м", highlight: false },
+      ],
+      pump: [
+        { label: "Производительность", value: "180 м³/ч", highlight: true },
+        { label: "Давление бетона", value: "8.5 МПа", highlight: false },
+        { label: "Диаметр цилиндра", value: "260 мм", highlight: false },
+        { label: "Длина хода", value: "2100 мм", highlight: false },
+      ],
+      chassis: [
+        { label: "Шасси", value: "VOLVO FM", highlight: false },
+        { label: "Двигатель", value: "VOLVO D13K", highlight: false },
+        { label: "Мощность", value: "460 л.с.", highlight: false },
+        { label: "Макс. скорость", value: "85 км/ч", highlight: false },
+      ],
+    },
+    features: [
+      "Высокая производительность до 180 м³/ч",
+      "Надежная гидравлическая система SANY",
+      "Автоматическая система смазки",
+      "Система контроля давления и температуры",
+      "Эргономичная кабина оператора",
+      "Система автоматической промывки",
+    ],
+    advantages: [
+      "Оптимальное соотношение цена/качество",
+      "Низкие эксплуатационные расходы",
+      "Высокая надежность и долговечность",
+      "Простота в обслуживании",
+      "Быстрая окупаемость инвестиций",
+      "Полная техническая поддержка",
+    ],
+    delivery: {
+      location: "Владивосток",
+      term: "30-45 дней",
+      warranty: "12 месяцев",
+      payment: "Предоплата 30%, остальное при поставке",
+    },
   },
   {
     id: "sany-370c-10",
     model: "SANY SYM5230THBF 370C-10",
-    title: "Автобетононасос SANY 370C-10",
-    subtitle: "Высота подачи 37 метров",
+    title: "SANY SYM5230THBF 370C-10",
+    subtitle: "Компактный автобетононасос с высотой подачи 37 метров",
     image: "/images/pump2.jpg",
     keySpecs: {
-      height: "37 м",
+      height: "37м",
       performance: "125 м³/ч",
-      reach: "33 м",
+      reach: "33.5м",
       weight: "28 500 кг",
     },
-    category: "medium",
-    slug: "sany-370c-10",
-    specs: "Высота подачи: 37м, Производительность: 125 м³/ч",
-    price: "от 14 200 000 ₽",
+    specifications: {
+      general: [
+        { label: "Длина", value: "12 500 мм", highlight: false },
+        { label: "Ширина", value: "2 500 мм", highlight: false },
+        { label: "Высота", value: "3 800 мм", highlight: false },
+        { label: "Масса", value: "28 500 кг", highlight: true },
+      ],
+      boom: [
+        { label: "Вертикальный вылет", value: "37.0 м", highlight: true },
+        { label: "Горизонтальный вылет", value: "33.5 м", highlight: true },
+        { label: "Глубина подачи", value: "28.5 м", highlight: false },
+        { label: "Минимальный радиус", value: "6.5 м", highlight: false },
+      ],
+      pump: [
+        { label: "Производительность", value: "125 м³/ч", highlight: true },
+        { label: "Давление бетона", value: "8.0 МПа", highlight: false },
+        { label: "Диаметр цилиндра", value: "230 мм", highlight: false },
+        { label: "Длина хода", value: "1800 мм", highlight: false },
+      ],
+      chassis: [
+        { label: "Шасси", value: "ISUZU FVZ", highlight: false },
+        { label: "Двигатель", value: "ISUZU 6UZ1", highlight: false },
+        { label: "Мощность", value: "370 л.с.", highlight: false },
+        { label: "Макс. скорость", value: "90 км/ч", highlight: false },
+      ],
+    },
+    features: [
+      "Компактные размеры для работы в ограниченном пространстве",
+      "Высокая маневренность и проходимость",
+      "Экономичный расход топлива",
+      "Простота управления и обслуживания",
+      "Надежная система охлаждения",
+      "Автоматическая диагностика неисправностей",
+    ],
+    advantages: [
+      "Идеален для малоэтажного строительства",
+      "Низкая стоимость владения",
+      "Быстрая установка и готовность к работе",
+      "Минимальные требования к площадке",
+      "Высокая точность подачи бетона",
+      "Отличная ремонтопригодность",
+    ],
+    delivery: {
+      location: "Владивосток",
+      term: "30-45 дней",
+      warranty: "12 месяцев",
+      payment: "Предоплата 30%, остальное при поставке",
+    },
   },
   {
     id: "sany-710s",
-    model: "SANY SYM5552THB 710S",
-    title: "Автобетононасос SANY 710S",
-    subtitle: "Высота подачи 71 метр",
+    model: "SANY SYM5502THBFS 710S",
+    title: "SANY SYM5502THBFS 710S",
+    subtitle: "Мощный автобетононасос с высотой подачи 71 метр",
     image: "/images/pump3.jpg",
     keySpecs: {
-      height: "71 м",
+      height: "71м",
       performance: "200 м³/ч",
-      reach: "65 м",
-      weight: "52 000 кг",
+      reach: "65м",
+      weight: "42 000 кг",
     },
-    category: "large",
-    slug: "sany-710s",
-    specs: "Высота подачи: 71м, Производительность: 200 м³/ч",
-    price: "от 24 800 000 ₽",
+    specifications: {
+      general: [
+        { label: "Длина", value: "16 000 мм", highlight: false },
+        { label: "Ширина", value: "2 500 мм", highlight: false },
+        { label: "Высота", value: "4 200 мм", highlight: false },
+        { label: "Масса", value: "42 000 кг", highlight: true },
+      ],
+      boom: [
+        { label: "Вертикальный вылет", value: "71.0 м", highlight: true },
+        { label: "Горизонтальный вылет", value: "65.0 м", highlight: true },
+        { label: "Глубина подачи", value: "45.0 м", highlight: false },
+        { label: "Минимальный радиус", value: "8.0 м", highlight: false },
+      ],
+      pump: [
+        { label: "Производительность", value: "200 м³/ч", highlight: true },
+        { label: "Давление бетона", value: "9.0 МПа", highlight: false },
+        { label: "Диаметр цилиндра", value: "280 мм", highlight: false },
+        { label: "Длина хода", value: "2300 мм", highlight: false },
+      ],
+      chassis: [
+        { label: "Шасси", value: "VOLVO FMX", highlight: false },
+        { label: "Двигатель", value: "VOLVO D16K", highlight: false },
+        { label: "Мощность", value: "540 л.с.", highlight: false },
+        { label: "Макс. скорость", value: "85 км/ч", highlight: false },
+      ],
+    },
+    features: [
+      "Максимальная высота подачи в классе",
+      "Усиленная конструкция стрелы",
+      "Система активной стабилизации",
+      "Автоматическое управление подачей",
+      "Система мониторинга износа",
+      "Быстрая установка и складывание",
+    ],
+    advantages: [
+      "Идеален для высотного строительства",
+      "Максимальная производительность",
+      "Превосходная надежность",
+      "Минимальное время простоя",
+      "Высокая точность позиционирования",
+      "Полный сервисный пакет",
+    ],
+    delivery: {
+      location: "Владивосток",
+      term: "45-60 дней",
+      warranty: "18 месяцев",
+      payment: "Предоплата 40%, остальное при поставке",
+    },
   },
   {
     id: "sany-750s",
-    model: "SANY SYM5552THB 750S",
-    title: "Автобетононасос SANY 750S",
-    subtitle: "Высота подачи 75 метров",
+    model: "SANY SYM5502THBFS 750S",
+    title: "SANY SYM5502THBFS 750S",
+    subtitle: "Флагманский автобетононасос с высотой подачи 75 метров",
     image: "/images/pump4.jpg",
     keySpecs: {
-      height: "75 м",
+      height: "75м",
       performance: "220 м³/ч",
-      reach: "68 м",
-      weight: "54 500 кг",
+      reach: "68м",
+      weight: "45 000 кг",
     },
-    category: "large",
-    slug: "sany-750s",
-    specs: "Высота подачи: 75м, Производительность: 220 м³/ч",
-    price: "от 26 900 000 ₽",
+    specifications: {
+      general: [
+        { label: "Длина", value: "16 500 мм", highlight: false },
+        { label: "Ширина", value: "2 500 мм", highlight: false },
+        { label: "Высота", value: "4 300 мм", highlight: false },
+        { label: "Масса", value: "45 000 кг", highlight: true },
+      ],
+      boom: [
+        { label: "Вертикальный вылет", value: "75.0 м", highlight: true },
+        { label: "Горизонтальный вылет", value: "68.0 м", highlight: true },
+        { label: "Глубина подачи", value: "48.0 м", highlight: false },
+        { label: "Минимальный радиус", value: "8.5 м", highlight: false },
+      ],
+      pump: [
+        { label: "Производительность", value: "220 м³/ч", highlight: true },
+        { label: "Давление бетона", value: "9.5 МПа", highlight: false },
+        { label: "Диаметр цилиндра", value: "300 мм", highlight: false },
+        { label: "Длина хода", value: "2500 мм", highlight: false },
+      ],
+      chassis: [
+        { label: "Шасси", value: "VOLVO FMX", highlight: false },
+        { label: "Двигатель", value: "VOLVO D16K", highlight: false },
+        { label: "Мощность", value: "600 л.с.", highlight: false },
+        { label: "Макс. скорость", value: "85 км/ч", highlight: false },
+      ],
+    },
+    features: [
+      "Рекордная высота подачи 75 метров",
+      "Революционная система управления",
+      "Интеллектуальная диагностика",
+      "Система предиктивного обслуживания",
+      "Автоматическая оптимизация работы",
+      "Дистанционное управление и мониторинг",
+    ],
+    advantages: [
+      "Лидер по техническим характеристикам",
+      "Максимальная эффективность работы",
+      "Инновационные технологии SANY",
+      "Минимальные эксплуатационные расходы",
+      "Превосходная окупаемость",
+      "Премиальная техническая поддержка",
+    ],
+    delivery: {
+      location: "Владивосток",
+      term: "60-75 дней",
+      warranty: "24 месяца",
+      payment: "Предоплата 50%, остальное при поставке",
+    },
   },
   {
     id: "sany-680c-10",
-    model: "SANY SYM5590THB 680C-10",
-    title: "Автобетононасос SANY 680C-10",
-    subtitle: "Высота подачи 68 метров",
+    model: "SANY SYM5502THBF 680C-10",
+    title: "SANY SYM5502THBF 680C-10",
+    subtitle: "Профессиональный автобетононасос с высотой подачи 68 метров",
     image: "/images/pump5.jpg",
     keySpecs: {
-      height: "68 м",
+      height: "68м",
       performance: "190 м³/ч",
-      reach: "62 м",
-      weight: "49 500 кг",
+      reach: "62м",
+      weight: "40 500 кг",
     },
-    category: "large",
-    slug: "sany-680c-10",
-    specs: "Высота подачи: 68м, Производительность: 190 м³/ч",
-    price: "от 22 100 000 ₽",
+    specifications: {
+      general: [
+        { label: "Длина", value: "15 500 мм", highlight: false },
+        { label: "Ширина", value: "2 500 мм", highlight: false },
+        { label: "Высота", value: "4 100 мм", highlight: false },
+        { label: "Масса", value: "40 500 кг", highlight: true },
+      ],
+      boom: [
+        { label: "Вертикальный вылет", value: "68.0 м", highlight: true },
+        { label: "Горизонтальный вылет", value: "62.0 м", highlight: true },
+        { label: "Глубина подачи", value: "42.0 м", highlight: false },
+        { label: "Минимальный радиус", value: "7.8 м", highlight: false },
+      ],
+      pump: [
+        { label: "Производительность", value: "190 м³/ч", highlight: true },
+        { label: "Давление бетона", value: "8.8 МПа", highlight: false },
+        { label: "Диаметр цилиндра", value: "270 мм", highlight: false },
+        { label: "Длина хода", value: "2200 мм", highlight: false },
+      ],
+      chassis: [
+        { label: "Шасси", value: "VOLVO FMX", highlight: false },
+        { label: "Двигатель", value: "VOLVO D13K", highlight: false },
+        { label: "Мощность", value: "500 л.с.", highlight: false },
+        { label: "Макс. скорость", value: "85 км/ч", highlight: false },
+      ],
+    },
+    features: [
+      "Оптимальная высота для большинства объектов",
+      "Сбалансированная производительность",
+      "Надежная система управления",
+      "Эффективная система охлаждения",
+      "Удобство обслуживания",
+      "Система контроля качества бетона",
+    ],
+    advantages: [
+      "Универсальность применения",
+      "Отличное соотношение цена/производительность",
+      "Проверенная надежность",
+      "Простота эксплуатации",
+      "Быстрая адаптация к объекту",
+      "Комплексная техническая поддержка",
+    ],
+    delivery: {
+      location: "Владивосток",
+      term: "45-60 дней",
+      warranty: "18 месяцев",
+      payment: "Предоплата 35%, остальное при поставке",
+    },
   },
   {
     id: "sany-620c-10",
-    model: "SANY SYM5463THBFB 620C-10",
-    title: "Автобетононасос SANY 620C-10",
-    subtitle: "Высота подачи 62 метра",
+    model: "SANY SYM5420THBF 620C-10",
+    title: "SANY SYM5420THBF 620C-10",
+    subtitle: "Надежный автобетононасос с высотой подачи 62 метра",
     image: "/images/pump6.jpg",
     keySpecs: {
-      height: "62 м",
+      height: "62м",
       performance: "170 м³/ч",
-      reach: "56 м",
-      weight: "45 000 кг",
+      reach: "56м",
+      weight: "38 000 кг",
     },
-    category: "medium",
-    slug: "sany-620c-10",
-    specs: "Высота подачи: 62м, Производительность: 170 м³/ч",
-    price: "от 19 700 000 ₽",
+    specifications: {
+      general: [
+        { label: "Длина", value: "15 000 мм", highlight: false },
+        { label: "Ширина", value: "2 500 мм", highlight: false },
+        { label: "Высота", value: "4 000 мм", highlight: false },
+        { label: "Масса", value: "38 000 кг", highlight: true },
+      ],
+      boom: [
+        { label: "Вертикальный вылет", value: "62.0 м", highlight: true },
+        { label: "Горизонтальный вылет", value: "56.0 м", highlight: true },
+        { label: "Глубина подачи", value: "40.0 м", highlight: false },
+        { label: "Минимальный радиус", value: "7.6 м", highlight: false },
+      ],
+      pump: [
+        { label: "Производительность", value: "170 м³/ч", highlight: true },
+        { label: "Давление бетона", value: "8.6 МПа", highlight: false },
+        { label: "Диаметр цилиндра", value: "250 мм", highlight: false },
+        { label: "Длина хода", value: "2000 мм", highlight: false },
+      ],
+      chassis: [
+        { label: "Шасси", value: "VOLVO FM", highlight: false },
+        { label: "Двигатель", value: "VOLVO D13K", highlight: false },
+        { label: "Мощность", value: "480 л.с.", highlight: false },
+        { label: "Макс. скорость", value: "85 км/ч", highlight: false },
+      ],
+    },
+    features: [
+      "Высокая надежность конструкции",
+      "Эффективная система подачи",
+      "Простое управление и настройка",
+      "Система автоматической очистки",
+      "Контроль параметров в реальном времени",
+      "Быстрая мобилизация на объекте",
+    ],
+    advantages: [
+      "Проверенная временем надежность",
+      "Оптимальные эксплуатационные расходы",
+      "Высокая производительность труда",
+      "Простота технического обслуживания",
+      "Отличная маневренность",
+      "Полная сервисная поддержка",
+    ],
+    delivery: {
+      location: "Владивосток",
+      term: "40-55 дней",
+      warranty: "15 месяцев",
+      payment: "Предоплата 35%, остальное при поставке",
+    },
   },
 ]
 
-// GET - получение списка моделей или конкретной модели
-export async function GET(request: Request) {
+// Функция для чтения данных из файла
+async function readModelsData(): Promise<ModelData[]> {
   try {
-    const { searchParams } = new URL(request.url)
-    const modelId = searchParams.get("id")
+    // Создаем директорию, если она не существует
+    if (!existsSync(DATA_DIR)) {
+      await mkdir(DATA_DIR, { recursive: true })
+    }
+
+    // Если файл не существует, создаем его с начальными данными
+    if (!existsSync(MODELS_FILE)) {
+      await writeFile(MODELS_FILE, JSON.stringify(initialModels, null, 2), "utf-8")
+      return initialModels
+    }
+
+    // Читаем данные из файла
+    const fileContent = await readFile(MODELS_FILE, "utf-8")
+    return JSON.parse(fileContent)
+  } catch (error) {
+    console.error("Ошибка чтения файла с моделями:", error)
+    return initialModels
+  }
+}
+
+// Функция для записи данных в файл
+async function writeModelsData(models: ModelData[]): Promise<void> {
+  try {
+    // Создаем директорию, если она не существует
+    if (!existsSync(DATA_DIR)) {
+      await mkdir(DATA_DIR, { recursive: true })
+    }
+
+    await writeFile(MODELS_FILE, JSON.stringify(models, null, 2), "utf-8")
+    console.log("✅ Данные моделей успешно сохранены в файл:", MODELS_FILE)
+  } catch (error) {
+    console.error("❌ Ошибка записи файла с моделями:", error)
+    throw error
+  }
+}
+
+// Получение всех моделей или конкретной модели
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url)
+  const modelId = searchParams.get("id")
+
+  try {
+    const models = await readModelsData()
 
     if (modelId) {
-      // Возвращаем конкретную модель
-      const model = modelsData.find((m) => m.id === modelId)
+      const model = models.find((m: ModelData) => m.id === modelId)
       if (!model) {
-        return NextResponse.json({ success: false, error: "Модель не найдена" }, { status: 404 })
+        return NextResponse.json({ error: "Модель не найдена" }, { status: 404 })
       }
       return NextResponse.json({ success: true, data: model })
     }
 
-    // Возвращаем все модели
-    return NextResponse.json({ success: true, data: modelsData })
+    return NextResponse.json({
+      success: true,
+      data: models.map((m: ModelData) => ({ id: m.id, title: m.title, model: m.model })),
+    })
   } catch (error) {
-    console.error("Ошибка получения моделей:", error)
-    return NextResponse.json({ success: false, error: "Ошибка сервера" }, { status: 500 })
+    console.error("Ошибка получения данных:", error)
+    return NextResponse.json({ error: "Ошибка получения данных" }, { status: 500 })
   }
 }
 
-// POST - создание новой модели
-export async function POST(request: Request) {
-  try {
-    const newModel = await request.json()
-
-    // Валидация обязательных полей (только title для новой модели)
-    if (!newModel.title) {
-      return NextResponse.json({ success: false, error: "Название модели обязательно" }, { status: 400 })
-    }
-
-    // Генерируем ID автоматически, если он не указан
-    if (!newModel.id) {
-      newModel.id = generateModelId(newModel.title)
-    }
-
-    // Проверяем, что модель с таким ID не существует
-    if (modelsData.find((m) => m.id === newModel.id)) {
-      return NextResponse.json({ success: false, error: "Модель с таким ID уже существует" }, { status: 400 })
-    }
-
-    // Определяем категорию на основе высоты подачи
-    let category = "medium"
-    const height = Number.parseFloat(newModel.keySpecs?.height?.replace(/[^\d.]/g, "") || "0")
-    if (height >= 65) {
-      category = "large"
-    } else if (height <= 30) {
-      category = "small"
-    }
-
-    // Определяем ценовую категорию
-    let price = "от 18 500 000 ₽"
-    if (height >= 65) {
-      price = "от 24 800 000 ₽"
-    } else if (height <= 30) {
-      price = "от 14 200 000 ₽"
-    }
-
-    // Формируем спецификацию для отображения на главной странице
-    const specs = `Высота подачи: ${newModel.keySpecs?.height || "N/A"}, Производительность: ${newModel.keySpecs?.performance || "N/A"}`
-
-    // Устанавливаем значения по умолчанию для обязательных полей
-    const modelWithDefaults = {
-      ...newModel,
-      model: newModel.model || newModel.title,
-      subtitle: newModel.subtitle || "",
-      image: newModel.image || "/placeholder.svg?height=400&width=600",
-      keySpecs: {
-        height: "",
-        performance: "",
-        reach: "",
-        weight: "",
-        ...newModel.keySpecs,
-      },
-      category,
-      slug: newModel.id,
-      specs,
-      price,
-    }
-
-    modelsData.push(modelWithDefaults)
-
-    console.log("✅ Новая модель создана:", modelWithDefaults.title)
-    return NextResponse.json({ success: true, data: modelWithDefaults })
-  } catch (error) {
-    console.error("Ошибка создания модели:", error)
-    return NextResponse.json({ success: false, error: "Ошибка сервера" }, { status: 500 })
-  }
-}
-
-// PUT - обновление существующей модели
+// Обновление модели
 export async function PUT(request: Request) {
   try {
-    const updatedModel = await request.json()
+    const updatedModel: ModelData = await request.json()
 
-    if (!updatedModel.id) {
-      return NextResponse.json({ success: false, error: "ID модели обязателен" }, { status: 400 })
-    }
+    // Читаем текущие данные
+    const models = await readModelsData()
 
-    const modelIndex = modelsData.findIndex((m) => m.id === updatedModel.id)
+    // Находим и обновляем модель
+    const modelIndex = models.findIndex((m) => m.id === updatedModel.id)
 
     if (modelIndex === -1) {
-      return NextResponse.json({ success: false, error: "Модель не найдена" }, { status: 404 })
+      return NextResponse.json({ error: "Модель не найдена" }, { status: 404 })
     }
 
-    // Определяем категорию на основе высоты подачи
-    let category = "medium"
-    const height = Number.parseFloat(updatedModel.keySpecs?.height?.replace(/[^\d.]/g, "") || "0")
-    if (height >= 65) {
-      category = "large"
-    } else if (height <= 30) {
-      category = "small"
-    }
+    models[modelIndex] = updatedModel
 
-    // Определяем ценовую категорию
-    let price = "от 18 500 000 ₽"
-    if (height >= 65) {
-      price = "от 24 800 000 ₽"
-    } else if (height <= 30) {
-      price = "от 14 200 000 ₽"
-    }
+    // Сохраняем обновленные данные
+    await writeModelsData(models)
 
-    // Формируем спецификацию для отображения на главной странице
-    const specs = `Высота подачи: ${updatedModel.keySpecs?.height || "N/A"}, Производительность: ${updatedModel.keySpecs?.performance || "N/A"}`
+    console.log("✅ Модель успешно обновлена:", updatedModel.model)
 
-    // Обновляем модель с дополнительными полями для главной страницы
-    const completeUpdatedModel = {
-      ...updatedModel,
-      category,
-      slug: updatedModel.id,
-      specs,
-      price,
-    }
-
-    modelsData[modelIndex] = completeUpdatedModel
-
-    console.log("✅ Модель обновлена:", updatedModel.title)
-    return NextResponse.json({ success: true, data: completeUpdatedModel })
+    return NextResponse.json({
+      success: true,
+      message: "Модель успешно обновлена",
+      data: updatedModel,
+    })
   } catch (error) {
-    console.error("Ошибка обновления модели:", error)
-    return NextResponse.json({ success: false, error: "Ошибка сервера" }, { status: 500 })
+    console.error("❌ Ошибка обновления модели:", error)
+    return NextResponse.json({ error: "Ошибка обновления модели" }, { status: 500 })
   }
 }
 
-// DELETE - удаление модели
+// Создание новой модели
+export async function POST(request: Request) {
+  try {
+    const newModel: Omit<ModelData, "id"> = await request.json()
+    const modelWithId = {
+      ...newModel,
+      id: newModel.model
+        .toLowerCase()
+        .replace(/\s+/g, "-")
+        .replace(/[^a-z0-9-]/g, ""),
+    }
+
+    // Читаем текущие данные
+    const models = await readModelsData()
+
+    // Проверяем, что модель с таким ID не существует
+    if (models.find((m) => m.id === modelWithId.id)) {
+      return NextResponse.json({ error: "Модель с таким ID уже существует" }, { status: 400 })
+    }
+
+    // Добавляем новую модель
+    models.push(modelWithId)
+
+    // Сохраняем обновленные данные
+    await writeModelsData(models)
+
+    console.log("✅ Новая модель успешно создана:", modelWithId.model)
+
+    return NextResponse.json({
+      success: true,
+      message: "Модель успешно создана",
+      data: modelWithId,
+    })
+  } catch (error) {
+    console.error("❌ Ошибка создания модели:", error)
+    return NextResponse.json({ error: "Ошибка создания модели" }, { status: 500 })
+  }
+}
+
+// Удаление модели
 export async function DELETE(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
     const modelId = searchParams.get("id")
 
     if (!modelId) {
-      return NextResponse.json({ success: false, error: "ID модели обязателен" }, { status: 400 })
+      return NextResponse.json({ error: "ID модели не указан" }, { status: 400 })
     }
 
-    const modelIndex = modelsData.findIndex((m) => m.id === modelId)
+    // Читаем текущие данные
+    const models = await readModelsData()
+
+    // Находим модель для удаления
+    const modelIndex = models.findIndex((m) => m.id === modelId)
 
     if (modelIndex === -1) {
-      return NextResponse.json({ success: false, error: "Модель не найдена" }, { status: 404 })
+      return NextResponse.json({ error: "Модель не найдена" }, { status: 404 })
     }
 
-    const deletedModel = modelsData.splice(modelIndex, 1)[0]
+    const deletedModel = models[modelIndex]
+    models.splice(modelIndex, 1)
 
-    console.log("✅ Модель удалена:", deletedModel.title)
-    return NextResponse.json({ success: true, data: deletedModel })
+    // Сохраняем обновленные данные
+    await writeModelsData(models)
+
+    console.log("✅ Модель успешно удалена:", deletedModel.model)
+
+    return NextResponse.json({
+      success: true,
+      message: "Модель успешно удалена",
+      data: deletedModel,
+    })
   } catch (error) {
-    console.error("Ошибка удаления модели:", error)
-    return NextResponse.json({ success: false, error: "Ошибка сервера" }, { status: 500 })
+    console.error("❌ Ошибка удаления модели:", error)
+    return NextResponse.json({ error: "Ошибка удаления модели" }, { status: 500 })
   }
-}
-
-// Функция для генерации уникального ID
-function generateModelId(title: string): string {
-  // Создаем ID на основе названия модели
-  const baseId = title
-    .toLowerCase()
-    .replace(/[^a-zа-я0-9\s]/g, "") // Убираем спецсимволы
-    .replace(/\s+/g, "-") // Заменяем пробелы на дефисы
-    .replace(/автобетононасос/g, "") // Убираем слово "автобетононасос"
-    .replace(/sany/g, "sany") // Оставляем SANY
-    .replace(/^-+|-+$/g, "") // Убираем дефисы в начале и конце
-    .replace(/-+/g, "-") // Заменяем множественные дефисы на одинарные
-
-  // Проверяем уникальность
-  let uniqueId = baseId
-  let counter = 1
-
-  while (modelsData.some((model) => model.id === uniqueId)) {
-    uniqueId = `${baseId}-${counter}`
-    counter++
-  }
-
-  return uniqueId
 }

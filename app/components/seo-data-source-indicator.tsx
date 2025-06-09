@@ -1,107 +1,105 @@
+"use client"
+
+import { useState, useEffect } from "react"
 import { Badge } from "@/components/ui/badge"
-import { CheckCircle, AlertTriangle, Clock, Database, WifiOff } from "lucide-react"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
 interface SEODataSourceIndicatorProps {
-  source: string
+  source?: string
   timestamp?: string
   isError?: boolean
-  showDetails?: boolean
 }
 
 export default function SEODataSourceIndicator({
-  source,
+  source = "Demo Data",
   timestamp,
   isError = false,
-  showDetails = true,
 }: SEODataSourceIndicatorProps) {
-  const getSourceInfo = () => {
-    if (isError) {
-      return {
-        icon: <AlertTriangle className="w-3 h-3" />,
-        label: "Ошибка",
-        color: "bg-red-600",
-        description: "Ошибка получения данных",
+  const [timeAgo, setTimeAgo] = useState<string>("")
+
+  useEffect(() => {
+    if (!timestamp) return
+
+    const updateTimeAgo = () => {
+      const now = new Date()
+      const updateTime = new Date(timestamp)
+      const diffMs = now.getTime() - updateTime.getTime()
+      const diffMins = Math.floor(diffMs / 60000)
+
+      if (diffMins < 1) {
+        setTimeAgo("только что")
+      } else if (diffMins < 60) {
+        setTimeAgo(`${diffMins} мин. назад`)
+      } else if (diffMins < 1440) {
+        setTimeAgo(`${Math.floor(diffMins / 60)} ч. назад`)
+      } else {
+        setTimeAgo(`${Math.floor(diffMins / 1440)} дн. назад`)
       }
     }
 
-    switch (source) {
-      case "Google Search Console API":
-      case "Google Search Console API (OAuth)":
-        return {
-          icon: <CheckCircle className="w-3 h-3" />,
-          label: "Google GSC",
-          color: "bg-green-600",
-          description: "Реальные данные из Google Search Console",
-        }
-      case "Google Analytics API":
-        return {
-          icon: <CheckCircle className="w-3 h-3" />,
-          label: "Google Analytics",
-          color: "bg-blue-600",
-          description: "Реальные данные из Google Analytics",
-        }
-      case "Yandex Webmaster API":
-        return {
-          icon: <CheckCircle className="w-3 h-3" />,
-          label: "Яндекс.Вебмастер",
-          color: "bg-yellow-600",
-          description: "Реальные данные из Яндекс.Вебмастер",
-        }
-      case "Not Available":
-      case "No Data":
-        return {
-          icon: <WifiOff className="w-3 h-3" />,
-          label: "Нет данных",
-          color: "bg-gray-600",
-          description: "Источник данных не подключен",
-        }
-      case "Error":
-        return {
-          icon: <AlertTriangle className="w-3 h-3" />,
-          label: "Ошибка",
-          color: "bg-red-600",
-          description: "Ошибка получения данных",
-        }
-      default:
-        return {
-          icon: <Database className="w-3 h-3" />,
-          label: "Неизвестно",
-          color: "bg-gray-600",
-          description: "Неизвестный источник данных",
-        }
+    updateTimeAgo()
+    const interval = setInterval(updateTimeAgo, 60000)
+
+    return () => clearInterval(interval)
+  }, [timestamp])
+
+  // Определяем цвет и иконку в зависимости от источника данных
+  const getSourceInfo = () => {
+    if (isError) {
+      return {
+        color: "bg-red-600 hover:bg-red-700",
+        icon: "⚠️",
+        label: "Ошибка API",
+      }
+    }
+
+    if (source.includes("Google Search Console")) {
+      return {
+        color: "bg-blue-600 hover:bg-blue-700",
+        icon: "🔍",
+        label: "Google Search Console",
+      }
+    }
+
+    if (source.includes("Yandex")) {
+      return {
+        color: "bg-yellow-600 hover:bg-yellow-700",
+        icon: "🟡",
+        label: "Яндекс.Вебмастер",
+      }
+    }
+
+    if (source.includes("SEMrush")) {
+      return {
+        color: "bg-green-600 hover:bg-green-700",
+        icon: "📈",
+        label: "SEMrush API",
+      }
+    }
+
+    return {
+      color: "bg-gray-600 hover:bg-gray-700",
+      icon: "🎲",
+      label: "Демо-данные",
     }
   }
 
   const sourceInfo = getSourceInfo()
 
-  const formatTimestamp = (timestamp: string) => {
-    try {
-      const date = new Date(timestamp)
-      const now = new Date()
-      const diffMs = now.getTime() - date.getTime()
-      const diffMinutes = Math.floor(diffMs / (1000 * 60))
-
-      if (diffMinutes < 1) return "только что"
-      if (diffMinutes < 60) return `${diffMinutes} мин назад`
-      if (diffMinutes < 1440) return `${Math.floor(diffMinutes / 60)} ч назад`
-      return date.toLocaleDateString("ru-RU")
-    } catch {
-      return "неизвестно"
-    }
-  }
-
   return (
-    <div className="flex items-center gap-2">
-      <Badge className={`${sourceInfo.color} flex items-center gap-1 text-xs`}>
-        {sourceInfo.icon}
-        {sourceInfo.label}
-      </Badge>
-      {showDetails && timestamp && (
-        <div className="flex items-center gap-1 text-xs text-gray-400">
-          <Clock className="w-3 h-3" />
-          {formatTimestamp(timestamp)}
-        </div>
-      )}
-    </div>
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Badge className={`${sourceInfo.color} cursor-help`}>
+            {sourceInfo.icon} {sourceInfo.label} {timeAgo && `• ${timeAgo}`}
+          </Badge>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>Источник данных: {source}</p>
+          {timestamp && <p>Обновлено: {new Date(timestamp).toLocaleString("ru-RU")}</p>}
+          {isError && <p className="text-red-400">Произошла ошибка при получении данных</p>}
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   )
 }

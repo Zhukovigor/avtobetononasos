@@ -1,175 +1,185 @@
 import { NextResponse } from "next/server"
 import { cookies } from "next/headers"
 
-export const dynamic = "force-dynamic"
-
 // Обработка callback от Google OAuth
 export async function GET(request: Request) {
   try {
-    console.log("🔄 Получен callback от Google OAuth")
-
     const { searchParams } = new URL(request.url)
     const code = searchParams.get("code")
-    const stateParam = searchParams.get("state")
+    const state = searchParams.get("state")
     const error = searchParams.get("error")
 
-    // Проверка на ошибки от Google
+    console.log("📥 Получен callback от Google OAuth")
+    console.log("Code:", code ? "✅ Получен" : "❌ Отсутствует")
+    console.log("State:", state)
+    console.log("Error:", error || "Нет ошибок")
+
+    // Проверка на ошибки авторизации
     if (error) {
-      console.error("❌ Ошибка от Google OAuth:", error)
+      console.error("❌ Ошибка авторизации Google:", error)
       return NextResponse.redirect(
-        `${getBaseUrl(request)}/admin?error=google_oauth&message=${encodeURIComponent(error)}`,
+        `${getBaseUrl(request)}/admin?error=oauth_error&message=${encodeURIComponent(error)}`,
       )
     }
 
-    // Проверка наличия кода авторизации
+    // Проверка state для безопасности
+    if (state !== "seo-monitor" && state !== "debug-test") {
+      console.error("❌ Неверный state параметр:", state)
+      return NextResponse.redirect(`${getBaseUrl(request)}/admin?error=invalid_state&message=Неверный параметр state`)
+    }
+
     if (!code) {
-      console.error("❌ Отсутствует код авторизации")
-      return NextResponse.redirect(
-        `${getBaseUrl(request)}/admin?error=no_code&message=${encodeURIComponent("Отсутствует код авторизации")}`,
-      )
+      console.error("❌ Код авторизации не получен")
+      return NextResponse.redirect(`${getBaseUrl(request)}/admin?error=no_code&message=Код авторизации не получен`)
     }
 
-    // Получаем переменные окружения
+    // Получаем необходимые переменные окружения
     const clientId = process.env.GOOGLE_CLIENT_ID
     const clientSecret = process.env.GOOGLE_CLIENT_SECRET
-    const redirectUri = process.env.GOOGLE_REDIRECT_URI || `${getBaseUrl(request)}/api/auth/google/callback`
+    let redirectUri = process.env.GOOGLE_REDIRECT_URI
 
-    if (!clientId || !clientSecret) {
-      console.error("❌ Отсутствуют переменные окружения для OAuth")
+    // Если redirectUri не установлен, определяем его автоматически
+    if (!redirectUri) {
+      redirectUri = `${getBaseUrl(request)}/api/auth/google/callback`
+      console.log("🔧 Автоматически определен redirect URI:", redirectUri)
+    }
+
+    // Проверяем наличие необходимых переменных
+    if (!clientId) {
+      console.error("❌ Отсутствует GOOGLE_CLIENT_ID")
       return NextResponse.redirect(
-        `${getBaseUrl(request)}/admin?error=env_missing&message=${encodeURIComponent(
-          "Отсутствуют необходимые переменные окружения",
+        `${getBaseUrl(request)}/admin?error=missing_client_id&message=${encodeURIComponent(
+          "Отсутствует GOOGLE_CLIENT_ID в переменных окружения",
         )}`,
       )
     }
 
+    if (!clientSecret) {
+      console.error("❌ Отсутствует GOOGLE_CLIENT_SECRET")
+      return NextResponse.redirect(
+        `${getBaseUrl(request)}/admin?error=missing_client_secret&message=${encodeURIComponent(
+          "Отсутствует GOOGLE_CLIENT_SECRET в переменных окружения",
+        )}`,
+      )
+    }
+
+    console.log("🔄 Обмен кода на токены...")
+    console.log("Client ID:", clientId ? "установлен" : "отсутствует")
+    console.log("Client Secret:", clientSecret ? "установлен" : "отсутствует")
+    console.log("Redirect URI:", redirectUri)
+
     // Обмен кода на токены
-    console.log("🔑 Обмен кода на токены")
     const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
       },
       body: new URLSearchParams({
-        code,
         client_id: clientId,
         client_secret: clientSecret,
-        redirect_uri: redirectUri,
+        code,
         grant_type: "authorization_code",
+        redirect_uri: redirectUri,
       }),
     })
 
     if (!tokenResponse.ok) {
       const errorData = await tokenResponse.text()
-      console.error("❌ Ошибка получения токенов:", errorData)
+      console.error("❌ Ошибка получения токена:", errorData)
       return NextResponse.redirect(
-        `${getBaseUrl(request)}/admin?error=token_exchange&message=${encodeURIComponent(
-          `Ошибка получения токенов: ${errorData}`,
+        `${getBaseUrl(request)}/admin?error=token_error&message=${encodeURIComponent(
+          `Ошибка получения токена: ${errorData}`,
         )}`,
       )
     }
 
-    const tokenData = await tokenResponse.json()
-    console.log("✅ Токены получены успешно")
+    const tokens = await tokenResponse.json()
+    console.log("✅ Токены успешно получены")
 
-    // Получение информации о пользователе
-    console.log("👤 Получение информации о пользователе")
-    const userInfoResponse = await fetch("https://www.googleapis.com/oauth2/v2/userinfo", {
-      headers: {
-        Authorization: `Bearer ${tokenData.access_token}`,
-      },
-    })
-
-    if (!userInfoResponse.ok) {
-      console.error("❌ Ошибка получения информации о пользователе")
-      return NextResponse.redirect(
-        `${getBaseUrl(request)}/admin?error=userinfo&message=${encodeURIComponent(
-          "Ошибка получения информации о пользователе",
-        )}`,
-      )
-    }
-
-    const userData = await userInfoResponse.json()
-    console.log("✅ Информация о пользователе получена")
-
-    // Сохраняем токены и информацию о пользователе в cookies
+    // Сохраняем токены в cookies
     const cookieStore = cookies()
 
-    // Сохраняем access_token (короткий срок жизни)
-    cookieStore.set("google_access_token", tokenData.access_token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      maxAge: tokenData.expires_in,
-      path: "/",
-    })
-
-    // Сохраняем refresh_token (долгий срок жизни)
-    if (tokenData.refresh_token) {
-      cookieStore.set("google_refresh_token", tokenData.refresh_token, {
+    try {
+      // Access token (действует 1 час)
+      cookieStore.set("google_access_token", tokens.access_token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
-        maxAge: 30 * 24 * 60 * 60, // 30 дней
+        maxAge: tokens.expires_in || 3600, // 1 час
         path: "/",
+        sameSite: "lax",
       })
-    }
 
-    // Сохраняем информацию о пользователе
-    cookieStore.set(
-      "google_user_info",
-      JSON.stringify({
-        name: userData.name,
-        email: userData.email,
-        picture: userData.picture,
-      }),
-      {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        maxAge: 30 * 24 * 60 * 60, // 30 дней
-        path: "/",
-      },
-    )
-
-    // Сохраняем время подключения и срок действия
-    cookieStore.set(
-      "google_session_info",
-      JSON.stringify({
-        connectedAt: new Date().toISOString(),
-        expiresAt: new Date(Date.now() + tokenData.expires_in * 1000).toISOString(),
-        scopes: tokenData.scope.split(" "),
-      }),
-      {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        maxAge: 30 * 24 * 60 * 60, // 30 дней
-        path: "/",
-      },
-    )
-
-    // Определяем URL для перенаправления
-    let returnUrl = "/admin"
-    if (stateParam) {
-      try {
-        const state = JSON.parse(stateParam)
-        if (state.returnUrl) {
-          returnUrl = state.returnUrl
-        }
-      } catch (e) {
-        console.error("❌ Ошибка парсинга state:", e)
+      // Refresh token (для обновления access token)
+      if (tokens.refresh_token) {
+        cookieStore.set("google_refresh_token", tokens.refresh_token, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          maxAge: 60 * 60 * 24 * 30, // 30 дней
+          path: "/",
+          sameSite: "lax",
+        })
       }
+
+      console.log("✅ Токены сохранены в cookies")
+    } catch (cookieError) {
+      console.error("❌ Ошибка сохранения cookies:", cookieError)
+      // Продолжаем выполнение, так как это не критическая ошибка
     }
 
-    console.log("✅ Авторизация успешно завершена, перенаправление на:", returnUrl)
-    return NextResponse.redirect(`${getBaseUrl(request)}${returnUrl}?auth=success`)
+    console.log("🔍 Получение информации о пользователе...")
+    // Получаем информацию о пользователе
+    try {
+      const userResponse = await fetch("https://www.googleapis.com/oauth2/v2/userinfo", {
+        headers: {
+          Authorization: `Bearer ${tokens.access_token}`,
+        },
+      })
+
+      if (userResponse.ok) {
+        const userInfo = await userResponse.json()
+        cookieStore.set("google_user_info", JSON.stringify(userInfo), {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          maxAge: 60 * 60 * 24, // 24 часа
+          path: "/",
+          sameSite: "lax",
+        })
+        console.log("✅ Информация о пользователе получена:", userInfo.email)
+      } else {
+        console.warn("⚠️ Не удалось получить информацию о пользователе")
+      }
+    } catch (userError) {
+      console.error("❌ Ошибка получения информации о пользователе:", userError)
+      // Продолжаем выполнение, так как это не критическая ошибка
+    }
+
+    // Перенаправляем обратно в админ панель с успешным статусом
+    console.log("✅ Авторизация успешно завершена, перенаправление в админ панель")
+    const successUrl = `${getBaseUrl(request)}/admin?success=oauth_connected&message=${encodeURIComponent(
+      "Google Search Console успешно подключен!",
+    )}`
+    console.log("🔗 Перенаправление на:", successUrl)
+
+    return NextResponse.redirect(successUrl)
   } catch (error) {
-    console.error("❌ Ошибка в процессе OAuth callback:", error)
-    return NextResponse.redirect(
-      `${getBaseUrl(request)}/admin?error=callback_error&message=${encodeURIComponent(
-        error instanceof Error ? error.message : "Неизвестная ошибка в процессе OAuth",
-      )}`,
-    )
+    console.error("❌ Критическая ошибка OAuth callback:", error)
+
+    // Подробная информация об ошибке для отладки
+    const errorMessage = error instanceof Error ? error.message : "Unknown error"
+    const errorStack = error instanceof Error ? error.stack : "No stack trace"
+
+    console.error("Error message:", errorMessage)
+    console.error("Error stack:", errorStack)
+
+    const errorUrl = `${getBaseUrl(request)}/admin?error=oauth_callback&message=${encodeURIComponent(
+      errorMessage,
+    )}&details=${encodeURIComponent("Проверьте логи сервера для подробной информации")}`
+
+    return NextResponse.redirect(errorUrl)
   }
 }
 
+// Вспомогательная функция для получения базового URL
 function getBaseUrl(request: Request): string {
   const url = new URL(request.url)
   return `${url.protocol}//${url.host}`

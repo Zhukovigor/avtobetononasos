@@ -203,24 +203,6 @@ export default function Hero() {
     }
   }
 
-  const handleWhatsAppClick = () => {
-    // Отправляем событие в Яндекс.Метрику
-    if (typeof window !== "undefined" && window.ym) {
-      window.ym(102485605, "reachGoal", "hero_whatsapp_click")
-    }
-
-    // Отправляем событие в Google Analytics
-    if (typeof window !== "undefined" && window.gtag) {
-      window.gtag("event", "contact_whatsapp", {
-        event_category: "lead_generation",
-        event_label: "hero_section",
-        value: 1,
-      })
-    }
-
-    window.open("https://wa.me/79190422492", "_blank")
-  }
-
   return (
     <div id="hero" className="relative h-screen w-full overflow-hidden">
       <canvas
@@ -234,17 +216,16 @@ export default function Hero() {
 
       {/* Контент */}
       <div className="relative z-10 flex h-full flex-col items-center justify-center px-4 text-center text-white">
-        <div className="animate-fade-in-up mb-16">
+        <div className="animate-fade-in-up">
           <h1 className="mb-6 text-5xl font-bold tracking-tight sm:text-6xl lg:text-7xl drop-shadow-2xl">
             АВТОБЕТОНОНАСОСЫ
           </h1>
           <p className="mb-8 max-w-[800px] text-xl text-blue-100 sm:text-2xl drop-shadow-lg">
             Продажа и поставка автобетононасосов SANY из Китая
           </p>
-        
         </div>
 
-        <div className="flex flex-col gap-6 sm:flex-row animate-fade-in-up animation-delay-300 mb-20">
+        <div className="flex flex-col gap-6 sm:flex-row animate-fade-in-up animation-delay-300">
           <button
             onClick={() => scrollToSection("catalog")}
             className="group relative overflow-hidden bg-white text-black px-8 py-4 text-lg font-semibold transition-all duration-300 hover:scale-105 hover:shadow-2xl rounded-lg"
@@ -255,11 +236,11 @@ export default function Hero() {
           </button>
 
           <button
-            onClick={handleWhatsAppClick}
+            onClick={() => scrollToSection("contact")}
             className="group relative overflow-hidden border-2 border-white text-white px-8 py-4 text-lg font-semibold transition-all duration-300 hover:scale-105 rounded-lg"
           >
             <span className="relative z-10 transition-colors duration-300 group-hover:text-black">
-              Связаться в WhatsApp
+              Связаться с нами
             </span>
             <div className="absolute inset-0 bg-white transform scale-x-0 origin-left transition-transform duration-300 group-hover:scale-x-100"></div>
             <div className="absolute inset-0 border-2 border-white transform rotate-0 transition-transform duration-300 group-hover:rotate-180 opacity-50"></div>
@@ -267,17 +248,13 @@ export default function Hero() {
         </div>
       </div>
 
-      {/* Индикатор прокрутки - теперь внизу экрана */}
+      {/* Индикатор прокрутки */}
       <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-10">
-        <button
-          onClick={() => scrollToSection("catalog")}
-          className="animate-bounce text-white/70 hover:text-white transition-colors duration-300"
-          aria-label="Прокрутить к каталогу"
-        >
-          <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="animate-bounce">
+          <svg className="w-6 h-6 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
           </svg>
-        </button>
+        </div>
       </div>
     </div>
   )

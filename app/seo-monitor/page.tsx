@@ -7,7 +7,6 @@ import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { AlertTriangle, Info, RefreshCw, Plus, Trash2 } from "lucide-react"
 import SEODataSourceIndicator from "../components/seo-data-source-indicator"
 
 interface PositionData {
@@ -51,44 +50,19 @@ export default function SEOMonitorPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [lastUpdate, setLastUpdate] = useState<string | null>(null)
-  const [dataSource, setDataSource] = useState<string>("No Data")
-  const [isConnected, setIsConnected] = useState(false)
+  const [dataSource, setDataSource] = useState<string>("Demo Data")
+  const [isApiError, setIsApiError] = useState(false)
   const [debugInfo, setDebugInfo] = useState<any>(null)
-
-  // Проверка подключения Google
-  useEffect(() => {
-    checkGoogleConnection()
-  }, [])
-
-  // Загрузка данных при первом рендере
-  useEffect(() => {
-    if (isConnected) {
-      fetchKeywordsData()
-    }
-  }, [isConnected])
-
-  const checkGoogleConnection = async () => {
-    try {
-      const response = await fetch("/api/auth/google/status")
-      const result = await response.json()
-      setIsConnected(result.connected || false)
-    } catch (error) {
-      console.error("Ошибка проверки подключения:", error)
-      setIsConnected(false)
-    }
-  }
+  const [showAllData, setShowAllData] = useState(false)
 
   // Функция для получения данных о позициях
   const fetchKeywordsData = async (getAllData = false) => {
-    if (!isConnected) {
-      setError("Google Search Console не подключен")
-      return
-    }
-
     setLoading(true)
     setError(null)
+    setIsApiError(false)
 
     try {
+      // Если нужны все данные, не передаем ключевые слова
       const keywordsParam = getAllData ? "" : keywords.join(",")
       const response = await fetch(
         `/api/seo-positions?keywords=${encodeURIComponent(keywordsParam)}&engine=google&days=90`,
@@ -102,21 +76,26 @@ export default function SEOMonitorPage() {
         setLastUpdate(data.timestamp)
         setDataSource(data.source)
         setDebugInfo(data.debug)
-        setError(null)
       } else {
-        setPositions([])
+        setPositions(data.data || [])
         setError(data.error || "Произошла ошибка при получении данных")
         setLastUpdate(data.timestamp)
         setDataSource(data.source)
+        setIsApiError(true)
         setDebugInfo(data.debug)
       }
     } catch (err) {
       setError("Ошибка при получении данных о позициях")
-      setPositions([])
+      setIsApiError(true)
     } finally {
       setLoading(false)
     }
   }
+
+  // Загрузка данных при первом рендере
+  useEffect(() => {
+    fetchKeywordsData()
+  }, [])
 
   // Добавление нового ключевого слова
   const addKeyword = () => {
@@ -154,42 +133,21 @@ export default function SEOMonitorPage() {
       <div className="container mx-auto max-w-6xl">
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-4">📊 SEO Мониторинг позиций</h1>
-          <p className="text-gray-400">Отслеживание позиций ключевых слов в Google Search Console</p>
+          <p className="text-gray-400">Отслеживание позиций ключевых слов в поисковых системах Google и Яндекс</p>
         </div>
-
-        {/* Статус подключения */}
-        {!isConnected && (
-          <Alert className="mb-6 bg-red-900/20 border-red-800">
-            <AlertTriangle className="h-4 w-4" />
-            <AlertDescription>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-red-300 font-medium">Google Search Console не подключен</p>
-                  <p className="text-red-400 text-sm mt-1">
-                    Для получения данных о позициях необходимо подключить Google Search Console
-                  </p>
-                </div>
-                <Button asChild className="bg-blue-600 hover:bg-blue-700">
-                  <a href="/admin/google-seo">Подключить</a>
-                </Button>
-              </div>
-            </AlertDescription>
-          </Alert>
-        )}
 
         {/* Диагностическая информация */}
         {debugInfo && (
           <Alert className="mb-6 bg-blue-900/20 border-blue-800">
-            <Info className="h-4 w-4" />
             <AlertDescription>
               <div className="text-sm">
                 <p>
-                  <strong>Информация о запросе:</strong>
+                  <strong>Отладочная информация:</strong>
                 </p>
                 <p>Запрошенных ключевых слов: {debugInfo.keywordsRequested?.length || 0}</p>
                 <p>Период: {debugInfo.daysRequested} дней</p>
                 <p>Найдено результатов: {debugInfo.totalResults}</p>
-                {debugInfo.totalResults === 0 && isConnected && (
+                {debugInfo.totalResults === 0 && (
                   <div className="mt-2 p-2 bg-yellow-900/30 rounded">
                     <p className="text-yellow-300">⚠️ Данные не найдены. Возможные причины:</p>
                     <ul className="list-disc list-inside mt-1 text-xs">
@@ -209,159 +167,136 @@ export default function SEOMonitorPage() {
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-white">🔍 Отслеживаемые ключевые слова</CardTitle>
               <div className="flex items-center gap-2">
-                <SEODataSourceIndicator source={dataSource} timestamp={lastUpdate || undefined} isError={!!error} />
-                {isConnected && (
-                  <>
-                    <Button
-                      onClick={() => fetchKeywordsData(false)}
-                      disabled={loading}
-                      variant="outline"
-                      className="bg-zinc-800 border-zinc-700 text-white hover:bg-zinc-700"
-                    >
-                      <RefreshCw className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`} />
-                      {loading ? "Обновление..." : "Обновить"}
-                    </Button>
-                    <Button
-                      onClick={() => fetchKeywordsData(true)}
-                      disabled={loading}
-                      variant="outline"
-                      className="bg-blue-800 border-blue-700 text-white hover:bg-blue-700"
-                    >
-                      {loading ? "Загрузка..." : "Все данные GSC"}
-                    </Button>
-                  </>
-                )}
+                <SEODataSourceIndicator source={dataSource} timestamp={lastUpdate || undefined} isError={isApiError} />
+                <Button
+                  onClick={() => fetchKeywordsData(false)}
+                  disabled={loading}
+                  variant="outline"
+                  className="bg-zinc-800 border-zinc-700 text-white hover:bg-zinc-700"
+                >
+                  {loading ? "Обновление..." : "Обновить данные"}
+                </Button>
+                <Button
+                  onClick={() => fetchKeywordsData(true)}
+                  disabled={loading}
+                  variant="outline"
+                  className="bg-blue-800 border-blue-700 text-white hover:bg-blue-700"
+                >
+                  {loading ? "Загрузка..." : "Все данные GSC"}
+                </Button>
               </div>
             </CardHeader>
             <CardContent>
-              {isConnected && (
-                <div className="mb-6">
-                  <div className="flex gap-2">
-                    <Input
-                      type="text"
-                      placeholder="Добавить ключевое слово"
-                      value={newKeyword}
-                      onChange={(e) => setNewKeyword(e.target.value)}
-                      className="bg-zinc-800 border-zinc-700 text-white"
-                      onKeyDown={(e) => e.key === "Enter" && addKeyword()}
-                    />
-                    <Button onClick={addKeyword} className="bg-blue-600 hover:bg-blue-700">
-                      <Plus className="w-4 h-4 mr-2" />
-                      Добавить
-                    </Button>
-                  </div>
+              <div className="mb-6">
+                <div className="flex gap-2">
+                  <Input
+                    type="text"
+                    placeholder="Добавить ключевое слово"
+                    value={newKeyword}
+                    onChange={(e) => setNewKeyword(e.target.value)}
+                    className="bg-zinc-800 border-zinc-700 text-white"
+                    onKeyDown={(e) => e.key === "Enter" && addKeyword()}
+                  />
+                  <Button onClick={addKeyword} className="bg-blue-600 hover:bg-blue-700">
+                    Добавить
+                  </Button>
                 </div>
-              )}
+              </div>
 
               <Tabs defaultValue="google">
                 <TabsList className="bg-zinc-800">
                   <TabsTrigger value="google" className="data-[state=active]:bg-blue-600">
                     Google
                   </TabsTrigger>
-                  <TabsTrigger value="yandex" className="data-[state=active]:bg-blue-600" disabled>
-                    Яндекс (скоро)
+                  <TabsTrigger value="yandex" className="data-[state=active]:bg-blue-600">
+                    Яндекс
                   </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="google" className="mt-4">
-                  {!isConnected ? (
-                    <div className="text-center py-12">
-                      <AlertTriangle className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-                      <h3 className="text-xl font-semibold text-white mb-2">Google Search Console не подключен</h3>
-                      <p className="text-gray-400 mb-6">
-                        Подключите Google Search Console для получения данных о позициях
-                      </p>
-                      <Button asChild className="bg-blue-600 hover:bg-blue-700">
-                        <a href="/admin/google-seo">Подключить Google</a>
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="overflow-x-auto">
-                      <table className="w-full">
-                        <thead>
-                          <tr className="border-b border-zinc-800">
-                            <th className="text-left py-2 px-4">Ключевое слово</th>
-                            <th className="text-center py-2 px-4">Позиция</th>
-                            <th className="text-center py-2 px-4">Клики</th>
-                            <th className="text-center py-2 px-4">Показы</th>
-                            <th className="text-center py-2 px-4">CTR</th>
-                            <th className="text-center py-2 px-4">Действия</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {loading
-                            ? Array(6)
-                                .fill(0)
-                                .map((_, i) => (
-                                  <tr key={`skeleton-${i}`} className="border-b border-zinc-800">
-                                    <td className="py-2 px-4">
-                                      <Skeleton className="h-4 w-32 bg-zinc-800" />
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b border-zinc-800">
+                          <th className="text-left py-2 px-4">Ключевое слово</th>
+                          <th className="text-center py-2 px-4">Позиция</th>
+                          <th className="text-center py-2 px-4">Клики</th>
+                          <th className="text-center py-2 px-4">Показы</th>
+                          <th className="text-center py-2 px-4">CTR</th>
+                          <th className="text-center py-2 px-4">Действия</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {loading
+                          ? Array(6)
+                              .fill(0)
+                              .map((_, i) => (
+                                <tr key={`skeleton-${i}`} className="border-b border-zinc-800">
+                                  <td className="py-2 px-4">
+                                    <Skeleton className="h-4 w-32 bg-zinc-800" />
+                                  </td>
+                                  <td className="py-2 px-4 text-center">
+                                    <Skeleton className="h-4 w-8 bg-zinc-800 mx-auto" />
+                                  </td>
+                                  <td className="py-2 px-4 text-center">
+                                    <Skeleton className="h-4 w-12 bg-zinc-800 mx-auto" />
+                                  </td>
+                                  <td className="py-2 px-4 text-center">
+                                    <Skeleton className="h-4 w-16 bg-zinc-800 mx-auto" />
+                                  </td>
+                                  <td className="py-2 px-4 text-center">
+                                    <Skeleton className="h-4 w-10 bg-zinc-800 mx-auto" />
+                                  </td>
+                                  <td className="py-2 px-4 text-center">
+                                    <Skeleton className="h-8 w-20 bg-zinc-800 mx-auto" />
+                                  </td>
+                                </tr>
+                              ))
+                          : positions.length > 0
+                            ? positions
+                                .filter((pos) => pos.searchEngine === "google")
+                                .map((pos, index) => (
+                                  <tr key={`${pos.keyword}-${index}`} className="border-b border-zinc-800">
+                                    <td className="py-2 px-4">{pos.keyword}</td>
+                                    <td className={`py-2 px-4 text-center ${getPositionClass(pos.position)}`}>
+                                      {getPositionIcon(pos.position)} {pos.position ?? "N/A"}
                                     </td>
                                     <td className="py-2 px-4 text-center">
-                                      <Skeleton className="h-4 w-8 bg-zinc-800 mx-auto" />
+                                      {pos.clicks !== undefined ? pos.clicks : "N/A"}
                                     </td>
                                     <td className="py-2 px-4 text-center">
-                                      <Skeleton className="h-4 w-12 bg-zinc-800 mx-auto" />
+                                      {pos.impressions !== undefined ? pos.impressions : "N/A"}
                                     </td>
                                     <td className="py-2 px-4 text-center">
-                                      <Skeleton className="h-4 w-16 bg-zinc-800 mx-auto" />
+                                      {pos.ctr !== undefined ? `${(pos.ctr * 100).toFixed(2)}%` : "N/A"}
                                     </td>
                                     <td className="py-2 px-4 text-center">
-                                      <Skeleton className="h-4 w-10 bg-zinc-800 mx-auto" />
-                                    </td>
-                                    <td className="py-2 px-4 text-center">
-                                      <Skeleton className="h-8 w-20 bg-zinc-800 mx-auto" />
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => removeKeyword(pos.keyword)}
+                                        className="text-red-400 hover:text-red-300 hover:bg-red-900/20"
+                                      >
+                                        Удалить
+                                      </Button>
                                     </td>
                                   </tr>
                                 ))
-                            : positions.length > 0
-                              ? positions
-                                  .filter((pos) => pos.searchEngine === "google")
-                                  .map((pos, index) => (
-                                    <tr key={`${pos.keyword}-${index}`} className="border-b border-zinc-800">
-                                      <td className="py-2 px-4">{pos.keyword}</td>
-                                      <td className={`py-2 px-4 text-center ${getPositionClass(pos.position)}`}>
-                                        {getPositionIcon(pos.position)} {pos.position ?? "N/A"}
-                                      </td>
-                                      <td className="py-2 px-4 text-center">
-                                        {pos.clicks !== undefined ? pos.clicks : "N/A"}
-                                      </td>
-                                      <td className="py-2 px-4 text-center">
-                                        {pos.impressions !== undefined ? pos.impressions : "N/A"}
-                                      </td>
-                                      <td className="py-2 px-4 text-center">
-                                        {pos.ctr !== undefined ? `${(pos.ctr * 100).toFixed(2)}%` : "N/A"}
-                                      </td>
-                                      <td className="py-2 px-4 text-center">
-                                        <Button
-                                          variant="ghost"
-                                          size="sm"
-                                          onClick={() => removeKeyword(pos.keyword)}
-                                          className="text-red-400 hover:text-red-300 hover:bg-red-900/20"
-                                        >
-                                          <Trash2 className="w-4 h-4" />
-                                        </Button>
-                                      </td>
-                                    </tr>
-                                  ))
-                              : !loading && (
-                                  <tr>
-                                    <td colSpan={6} className="py-8 text-center text-gray-400">
-                                      <div className="space-y-2">
-                                        <p>Данные не найдены</p>
-                                        <p className="text-sm">
-                                          {error
-                                            ? "Произошла ошибка при получении данных"
-                                            : "Попробуйте нажать 'Все данные GSC' для получения всех доступных данных"}
-                                        </p>
-                                      </div>
-                                    </td>
-                                  </tr>
-                                )}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
+                            : !loading && (
+                                <tr>
+                                  <td colSpan={6} className="py-8 text-center text-gray-400">
+                                    <div className="space-y-2">
+                                      <p>Данные не найдены</p>
+                                      <p className="text-sm">
+                                        Попробуйте нажать "Все данные GSC" для получения всех доступных данных
+                                      </p>
+                                    </div>
+                                  </td>
+                                </tr>
+                              )}
+                      </tbody>
+                    </table>
+                  </div>
                 </TabsContent>
 
                 <TabsContent value="yandex" className="mt-4">
@@ -372,10 +307,7 @@ export default function SEOMonitorPage() {
               </Tabs>
 
               {error && (
-                <Alert className="mt-4 bg-red-900/20 border-red-800">
-                  <AlertTriangle className="h-4 w-4" />
-                  <AlertDescription className="text-red-300">{error}</AlertDescription>
-                </Alert>
+                <div className="mt-4 p-3 bg-red-900/30 border border-red-800 rounded-md text-red-300">{error}</div>
               )}
             </CardContent>
           </Card>
@@ -413,9 +345,13 @@ export default function SEOMonitorPage() {
                 </div>
 
                 <div className="bg-zinc-800 p-4 rounded-lg">
-                  <div className="text-sm text-gray-400 mb-1">Статус подключения</div>
+                  <div className="text-sm text-gray-400 mb-1">Источник данных</div>
                   <div className="text-xl font-medium">
-                    <SEODataSourceIndicator source={dataSource} timestamp={lastUpdate || undefined} isError={!!error} />
+                    <SEODataSourceIndicator
+                      source={dataSource}
+                      timestamp={lastUpdate || undefined}
+                      isError={isApiError}
+                    />
                   </div>
                 </div>
               </div>
