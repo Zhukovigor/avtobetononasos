@@ -1,1 +1,312 @@
-[]
+[
+  {
+    "id": "sany-530s",
+    "title": "SANY 530S",
+    "keySpecs": {
+      "height": "53 метра",
+      "performance": "180 м³/ч",
+      "reach": "49 метров",
+      "weight": "42 тонны"
+    },
+    "technicalSpecs": {
+      "general": {
+        "model": "SANY 530S",
+        "type": "Автобетононасос",
+        "year": "2023",
+        "origin": "Китай"
+      },
+      "boom": {
+        "height": "53 метра",
+        "reach": "49 метров",
+        "sections": "5",
+        "foldingType": "Z-образная"
+      },
+      "pump": {
+        "performance": "180 м³/ч",
+        "pressure": "85 бар",
+        "cylinderDiameter": "230 мм",
+        "strokeLength": "2100 мм"
+      },
+      "chassis": {
+        "model": "SANY",
+        "axles": "5",
+        "driveFormula": "10x4",
+        "engine": "Weichai WP13.500E501, 500 л.с."
+      }
+    },
+    "features": [
+      "Система автоматической диагностики",
+      "Система контроля давления",
+      "Система защиты от перегрузки",
+      "Система автоматической смазки",
+      "Дистанционное управление",
+      "Экономичный расход топлива",
+      "Высокая надежность и долговечность"
+    ],
+    "deliveryTerms": {
+      "location": "Со склада в Москве",
+      "term": "30-45 дней",
+      "warranty": "12 месяцев или 1500 моточасов",
+      "payment": "Лизинг, рассрочка, Trade-in"
+    }
+  },
+  {
+    "id": "sany-370c-10",
+    "title": "SANY 370C-10",
+    "keySpecs": {
+      "height": "37 метров",
+      "performance": "125 м³/ч",
+      "reach": "33 метра",
+      "weight": "28 тонн"
+    },
+    "technicalSpecs": {
+      "general": {
+        "model": "SANY 370C-10",
+        "type": "Автобетононасос",
+        "year": "2023",
+        "origin": "Китай"
+      },
+      "boom": {
+        "height": "37 метров",
+        "reach": "33 метра",
+        "sections": "4",
+        "foldingType": "Z-образная"
+      },
+      "pump": {
+        "performance": "125 м³/ч",
+        "pressure": "75 бар",
+        "cylinderDiameter": "200 мм",
+        "strokeLength": "1800 мм"
+      },
+      "chassis": {
+        "model": "SANY",
+        "axles": "3",
+        "driveFormula": "6x4",
+        "engine": "Weichai WP10.380E40, 380 л.с."
+      }
+    },
+    "features": [
+      "Компактные размеры",
+      "Экономичный расход топлива",
+      "Система автоматической смазки",
+      "Дистанционное управление",
+      "Высокая маневренность",
+      "Простота обслуживания"
+    ],
+    "deliveryTerms": {
+      "location": "Со склада в Москве",
+      "term": "15-30 дней",
+      "warranty": "12 месяцев или 1500 моточасов",
+      "payment": "Лизинг, рассрочка, Trade-in"
+    }
+  },
+  {
+    "id": "sany-710s",
+    "title": "SANY 710S",
+    "keySpecs": {
+      "height": "71 метр",
+      "performance": "200 м³/ч",
+      "reach": "67 метров",
+      "weight": "56 тонн"
+    },
+    "technicalSpecs": {
+      "general": {
+        "model": "SANY 710S",
+        "type": "Автобетононасос",
+        "year": "2023",
+        "origin": "Китай"
+      },
+      "boom": {
+        "height": "71 метр",
+        "reach": "67 метров",
+        "sections": "6",
+        "foldingType": "RZ-образная"
+      },
+      "pump": {
+        "performance": "200 м³/ч",
+        "pressure": "90 бар",
+        "cylinderDiameter": "260 мм",
+        "strokeLength": "2300 мм"
+      },
+      "chassis": {
+        "model": "SANY",
+        "axles": "6",
+        "driveFormula": "12x6",
+        "engine": "Weichai WP13.600E501, 600 л.с."
+      }
+    },
+    "features": [
+      "Система автоматической диагностики",
+      "Система контроля давления",
+      "Система защиты от перегрузки",
+      "Система автоматической смазки",
+      "Дистанционное управление",
+      "Высокая производительность",
+      "Максимальная высота подачи",
+      "Усиленная конструкция стрелы"
+    ],
+    "deliveryTerms": {
+      "location": "Под заказ",
+      "term": "60-90 дней",
+      "warranty": "12 месяцев или 1500 моточасов",
+      "payment": "Лизинг, рассрочка, Trade-in"
+    }
+  },
+  {
+    "id": "sany-750s",
+    "title": "SANY 750S",
+    "keySpecs": {
+      "height": "75 метров",
+      "performance": "220 м³/ч",
+      "reach": "71 метр",
+      "weight": "62 тонны"
+    },
+    "technicalSpecs": {
+      "general": {
+        "model": "SANY 750S",
+        "type": "Автобетононасос",
+        "year": "2023",
+        "origin": "Китай"
+      },
+      "boom": {
+        "height": "75 метров",
+        "reach": "71 метр",
+        "sections": "6",
+        "foldingType": "RZ-образная"
+      },
+      "pump": {
+        "performance": "220 м³/ч",
+        "pressure": "95 бар",
+        "cylinderDiameter": "280 мм",
+        "strokeLength": "2400 мм"
+      },
+      "chassis": {
+        "model": "SANY",
+        "axles": "7",
+        "driveFormula": "14x6",
+        "engine": "Weichai WP13.650E501, 650 л.с."
+      }
+    },
+    "features": [
+      "Система автоматической диагностики",
+      "Система контроля давления",
+      "Система защиты от перегрузки",
+      "Система автоматической смазки",
+      "Дистанционное управление",
+      "Максимальная высота подачи в классе",
+      "Усиленная конструкция стрелы",
+      "Система стабилизации при работе",
+      "Электронная система контроля нагрузки"
+    ],
+    "deliveryTerms": {
+      "location": "Под заказ",
+      "term": "90-120 дней",
+      "warranty": "12 месяцев или 1500 моточасов",
+      "payment": "Лизинг, рассрочка, Trade-in"
+    }
+  },
+  {
+    "id": "sany-680c-10",
+    "title": "SANY 680C-10",
+    "keySpecs": {
+      "height": "68 метров",
+      "performance": "190 м³/ч",
+      "reach": "64 метра",
+      "weight": "52 тонны"
+    },
+    "technicalSpecs": {
+      "general": {
+        "model": "SANY 680C-10",
+        "type": "Автобетононасос",
+        "year": "2023",
+        "origin": "Китай"
+      },
+      "boom": {
+        "height": "68 метров",
+        "reach": "64 метра",
+        "sections": "6",
+        "foldingType": "RZ-образная"
+      },
+      "pump": {
+        "performance": "190 м³/ч",
+        "pressure": "85 бар",
+        "cylinderDiameter": "250 мм",
+        "strokeLength": "2200 мм"
+      },
+      "chassis": {
+        "model": "SANY",
+        "axles": "6",
+        "driveFormula": "12x6",
+        "engine": "Weichai WP13.580E501, 580 л.с."
+      }
+    },
+    "features": [
+      "Система автоматической диагностики",
+      "Система контроля давления",
+      "Система защиты от перегрузки",
+      "Система автоматической смазки",
+      "Дистанционное управление",
+      "Оптимальное соотношение высоты и веса",
+      "Усиленная конструкция стрелы",
+      "Система стабилизации при работе"
+    ],
+    "deliveryTerms": {
+      "location": "Под заказ",
+      "term": "60-90 дней",
+      "warranty": "12 месяцев или 1500 моточасов",
+      "payment": "Лизинг, рассрочка, Trade-in"
+    }
+  },
+  {
+    "id": "sany-620c-10",
+    "title": "SANY 620C-10",
+    "keySpecs": {
+      "height": "62 метра",
+      "performance": "170 м³/ч",
+      "reach": "58 метров",
+      "weight": "48 тонн"
+    },
+    "technicalSpecs": {
+      "general": {
+        "model": "SANY 620C-10",
+        "type": "Автобетононасос",
+        "year": "2023",
+        "origin": "Китай"
+      },
+      "boom": {
+        "height": "62 метра",
+        "reach": "58 метров",
+        "sections": "5",
+        "foldingType": "RZ-образная"
+      },
+      "pump": {
+        "performance": "170 м³/ч",
+        "pressure": "85 бар",
+        "cylinderDiameter": "240 мм",
+        "strokeLength": "2100 мм"
+      },
+      "chassis": {
+        "model": "SANY",
+        "axles": "5",
+        "driveFormula": "10x6",
+        "engine": "Weichai WP13.540E501, 540 л.с."
+      }
+    },
+    "features": [
+      "Система автоматической диагностики",
+      "Система контроля давления",
+      "Система защиты от перегрузки",
+      "Система автоматической смазки",
+      "Дистанционное управление",
+      "Оптимальное соотношение цены и качества",
+      "Высокая надежность и долговечность",
+      "Простота обслуживания"
+    ],
+    "deliveryTerms": {
+      "location": "Со склада в Москве",
+      "term": "30-60 дней",
+      "warranty": "12 месяцев или 1500 моточасов",
+      "payment": "Лизинг, рассрочка, Trade-in"
+    }
+  }
+]

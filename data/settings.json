@@ -1,0 +1,42 @@
+{
+  "siteName": "SANY Автобетононасосы",
+  "siteDescription": "Продажа и аренда автобетононасосов SANY в России",
+  "contactEmail": "zhukovigor@mail.ru",
+  "contactPhone": "+7 (919) 042-24-92",
+  "autoUpdate": true,
+  "emailNotifications": true,
+  "weeklyReports": true,
+  "criticalAlerts": true,
+  "updateFrequency": "daily",
+  "reportEmail": "zhukovigor@mail.ru",
+  "apiKeys": {
+    "yandexWordstat": "",
+    "googleSearchConsole": "",
+    "semrush": "",
+    "googleAnalytics": ""
+  },
+  "defaultWarranty": "12 месяцев",
+  "defaultLocation": "Москва, Санкт-Петербург, Новосибирск",
+  "defaultPayment": "Лизинг",
+  "leadNotificationEmail": "zhukovigor@mail.ru",
+  "autoResponse": true,
+  "autoResponseText": "Спасибо за обращение! Мы свяжемся с вами в течение 30 минут.",
+  "socialLinks": {
+    "whatsapp": "https://wa.me/79190422492",
+    "telegram": "https://t.me/sany_global",
+    "vk": "https://vk.com/sprostehnika",
+    "dzen": "https://dzen.ru/sprostehnika"
+  },
+  "currency": "RUB",
+  "language": "ru",
+  "showPrices": true,
+  "workingHours": "Пн-Пт: 9:00-18:00",
+  "enableCaptcha": true,
+  "maxRequestsPerHour": 100,
+  "defaultMetaTitle": "Автобетононасосы SANY - Продажа и аренда",
+  "defaultMetaDescription": "Официальный дилер SANY в России. Продажа и аренда автобетононасосов с гарантией.",
+  "defaultMetaKeywords": "автобетононасос SANY, купить бетононасос, аренда автобетононасоса",
+  "yandexMetrikaId": "102485605",
+  "googleAnalyticsId": "",
+  "lastUpdated": "2024-01-15T10:30:00.000Z"
+}

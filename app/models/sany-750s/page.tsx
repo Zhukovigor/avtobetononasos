@@ -1,18 +1,18 @@
+import DynamicModelPage from "../[id]/DynamicModelPage"
 import type { Metadata } from "next"
-import Sany750SClientPage from "./Sany750SClientPage"
+
+// Добавляем динамическую конфигурацию
+export const dynamic = "force-dynamic"
+export const dynamicParams = true
+export const revalidate = 0
 
 export const metadata: Metadata = {
-  title: "SANY SYM5552THB 750S - Автобетононасос 75м | Купить в России",
+  title: "SANY SYM5502THBDZ 750S - технические характеристики автобетононасоса",
   description:
-    "SANY 750S - автобетононасос с высотой подачи 75 метров. Производительность 180 м³/ч. Цена, характеристики, условия поставки. Звоните +7 919 042 24 92",
-  keywords: "SANY 750S, автобетононасос 75м, купить автобетононасос, SANY SYM5552THB, бетононасос 75 метров",
-  openGraph: {
-    title: "SANY 750S - Автобетононасос 75м",
-    description: "Автобетононасос SANY 750S с высотой подачи 75 метров. В наличии с ЭПТС.",
-    images: ["/images/pump4.jpg"],
-  },
+    "Подробные технические характеристики автобетононасоса SANY 750S: высота подачи 75м, производительность 180 м³/ч.",
+  keywords: "SANY 750S, автобетононасос 75 метров, характеристики, цена, купить",
 }
 
 export default function Sany750SPage() {
-  return <Sany750SClientPage />
+  return <DynamicModelPage modelId="sany-750s" />
 }

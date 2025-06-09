@@ -15,22 +15,22 @@ interface PositionData {
   ctr?: number
 }
 
-// Обновленный API endpoint для работы с OAuth токенами
+// API endpoint для работы только с реальными данными
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   const keywords = searchParams.get("keywords")?.split(",") || []
   const searchEngine = searchParams.get("engine") || "google"
   const location = searchParams.get("location") || "Russia"
-  const days = Number.parseInt(searchParams.get("days") || "90", 10) // Увеличили период до 90 дней
+  const days = Number.parseInt(searchParams.get("days") || "90", 10)
 
   try {
-    // Если запрашиваются данные из Google Search Console
+    // Только реальные данные из Google Search Console
     if (searchEngine === "google") {
       const gscData = await getGoogleSearchConsoleDataWithOAuth(keywords, days)
       return NextResponse.json({
         success: true,
         data: gscData,
-        source: "Google Search Console API (OAuth)",
+        source: "Google Search Console API",
         timestamp: new Date().toISOString(),
         debug: {
           keywordsRequested: keywords,
@@ -39,37 +39,34 @@ export async function GET(request: Request) {
         },
       })
     }
-    // Если запрашиваются данные из Яндекс.Вебмастер (пока используем демо)
+    // Для Яндекс пока нет реальной интеграции
     else if (searchEngine === "yandex") {
-      const positions = generateDemoData(keywords, "yandex", location)
       return NextResponse.json({
-        success: true,
-        data: positions,
-        source: "Demo Data (Yandex)",
+        success: false,
+        error: "Интеграция с Яндекс.Вебмастер не настроена",
+        data: [],
+        source: "Not Available",
         timestamp: new Date().toISOString(),
       })
     }
-    // Для других поисковых систем используем демо-данные
+    // Для других поисковых систем
     else {
-      const positions = generateDemoData(keywords, searchEngine as any, location)
       return NextResponse.json({
-        success: true,
-        data: positions,
-        source: "Demo Data",
+        success: false,
+        error: "Поисковая система не поддерживается",
+        data: [],
+        source: "Not Available",
         timestamp: new Date().toISOString(),
       })
     }
   } catch (error) {
     console.error("Ошибка при получении данных о позициях:", error)
 
-    // В случае ошибки возвращаем демо-данные с пометкой об ошибке
-    const positions = generateDemoData(keywords, searchEngine as any, location)
     return NextResponse.json({
       success: false,
-      error: "Ошибка при получении данных из API. Используются демо-данные.",
-      errorDetails: error instanceof Error ? error.message : String(error),
-      data: positions,
-      source: "Demo Data (Fallback)",
+      error: error instanceof Error ? error.message : "Ошибка при получении данных",
+      data: [],
+      source: "Error",
       timestamp: new Date().toISOString(),
     })
   }
@@ -110,7 +107,6 @@ async function getGoogleSearchConsoleDataWithOAuth(keywords: string[], days = 90
       try {
         console.log(`🌐 Проверяем сайт: ${site}`)
 
-        // Сначала получаем все данные без фильтрации по ключевым словам
         const response = await fetch(
           `https://www.googleapis.com/webmasters/v3/sites/${encodeURIComponent(site)}/searchAnalytics/query`,
           {
@@ -123,7 +119,7 @@ async function getGoogleSearchConsoleDataWithOAuth(keywords: string[], days = 90
               startDate: formattedStartDate,
               endDate: formattedEndDate,
               dimensions: ["query", "page"],
-              rowLimit: 1000, // Увеличили лимит
+              rowLimit: 1000,
               startRow: 0,
             }),
           },
@@ -148,7 +144,6 @@ async function getGoogleSearchConsoleDataWithOAuth(keywords: string[], days = 90
         console.log(`📊 Получено строк данных для ${site}: ${data.rows?.length || 0}`)
 
         if (data.rows && data.rows.length > 0) {
-          // Преобразуем данные в нужный формат
           const siteData: PositionData[] = data.rows.map((row: any) => {
             const keyword = row.keys[0]
             const url = row.keys[1] || site
@@ -187,31 +182,11 @@ async function getGoogleSearchConsoleDataWithOAuth(keywords: string[], days = 90
     }
 
     console.log(`📈 Итого данных: ${allData.length}`)
-    return allData.slice(0, 100) // Ограничиваем до 100 записей для отображения
+    return allData.slice(0, 100)
   } catch (error) {
     console.error("Ошибка при получении данных из Google Search Console:", error)
     throw error
   }
-}
-
-// Функция для генерации демо-данных (используется как запасной вариант)
-function generateDemoData(
-  keywords: string[],
-  searchEngine: "google" | "yandex" = "google",
-  location = "Russia",
-): PositionData[] {
-  return keywords.map((keyword) => ({
-    keyword: keyword.trim(),
-    position: Math.random() > 0.1 ? Math.floor(Math.random() * 50) + 1 : null,
-    url: "https://v0-avtobetononasos.vercel.app",
-    searchEngine,
-    location,
-    device: "desktop",
-    date: new Date().toISOString().split("T")[0],
-    clicks: Math.floor(Math.random() * 100),
-    impressions: Math.floor(Math.random() * 1000) + 100,
-    ctr: Math.random() * 0.1,
-  }))
 }
 
 // API для добавления новых ключевых слов для отслеживания

@@ -1,599 +1,476 @@
-import { NextResponse } from "next/server"
-import { writeFile, readFile, mkdir } from "fs/promises"
-import { existsSync } from "fs"
-import path from "path"
+import { type NextRequest, NextResponse } from "next/server"
 
-// Интерфейс для данных модели
-interface ModelData {
-  id: string
-  model: string
-  title: string
-  subtitle: string
-  image: string
-  keySpecs: {
-    height: string
-    performance: string
-    reach: string
-    weight: string
-  }
-  specifications: {
-    general: Array<{
-      label: string
-      value: string
-      highlight?: boolean
-    }>
-    boom: Array<{
-      label: string
-      value: string
-      highlight?: boolean
-    }>
-    pump: Array<{
-      label: string
-      value: string
-      highlight?: boolean
-    }>
-    chassis: Array<{
-      label: string
-      value: string
-      highlight?: boolean
-    }>
-  }
-  features: string[]
-  advantages: string[]
-  delivery: {
-    location: string
-    term: string
-    warranty: string
-    payment: string
-  }
-}
+// Добавляем динамическую конфигурацию
+export const dynamic = "force-dynamic"
+export const runtime = "nodejs"
 
-// Путь к файлу с данными
-const DATA_DIR = path.join(process.cwd(), "data")
-const MODELS_FILE = path.join(DATA_DIR, "models.json")
-
-// Начальные данные моделей
-const initialModels: ModelData[] = [
-  {
+// Данные моделей (в реальном проекте это было бы из базы данных)
+const modelsData = {
+  "sany-530s": {
     id: "sany-530s",
-    model: "SANY SYM5365THBFS 530S",
-    title: "SANY SYM5365THBFS 530S",
-    subtitle: "Автобетононасос с высотой подачи 53 метра",
+    model: "SANY SYG5530THB-62",
+    title: "SANY SYG5530THB-62 - Автобетононасос 62м",
+    subtitle: "Высокопроизводительный автобетононасос для крупных строительных объектов",
     image: "/images/pump1.jpg",
     keySpecs: {
-      height: "53м",
+      height: "62 м",
       performance: "180 м³/ч",
-      reach: "48.5м",
-      weight: "36 500 кг",
+      reach: "54 м",
+      weight: "53 т",
+      length: "16.5 м",
+      width: "2.5 м",
+      totalHeight: "4.0 м",
+      depthReach: "45 м",
+      minRadius: "7.5 м",
+      pressure: "8.5 МПа",
+      cylinderDiameter: "230 мм",
+      strokeLength: "2100 мм",
+      chassis: "SANY",
+      engine: "Weichai WP12.375E40",
+      power: "375 л.с.",
+      maxSpeed: "90 км/ч",
     },
     specifications: {
       general: [
-        { label: "Длина", value: "14 500 мм", highlight: false },
-        { label: "Ширина", value: "2 500 мм", highlight: false },
-        { label: "Высота", value: "4 000 мм", highlight: false },
-        { label: "Масса", value: "36 500 кг", highlight: true },
+        { label: "Максимальная высота подачи", value: "62 м", highlight: true },
+        { label: "Максимальная производительность", value: "180 м³/ч", highlight: true },
+        { label: "Максимальный горизонтальный вылет", value: "54 м" },
+        { label: "Общая масса", value: "53 т" },
       ],
       boom: [
-        { label: "Вертикальный вылет", value: "53.0 м", highlight: true },
-        { label: "Горизонтальный вылет", value: "48.5 м", highlight: true },
-        { label: "Глубина подачи", value: "38.5 м", highlight: false },
-        { label: "Минимальный радиус", value: "7.5 м", highlight: false },
+        { label: "Количество секций стрелы", value: "5" },
+        { label: "Длина стрелы", value: "62 м" },
+        { label: "Угол поворота", value: "365°" },
+        { label: "Время развертывания", value: "8 мин" },
       ],
       pump: [
-        { label: "Производительность", value: "180 м³/ч", highlight: true },
-        { label: "Давление бетона", value: "8.5 МПа", highlight: false },
-        { label: "Диаметр цилиндра", value: "260 мм", highlight: false },
-        { label: "Длина хода", value: "2100 мм", highlight: false },
+        { label: "Тип насоса", value: "Поршневой" },
+        { label: "Диаметр цилиндра", value: "230 мм" },
+        { label: "Ход поршня", value: "2100 мм" },
+        { label: "Максимальное давление", value: "8.5 МПа" },
       ],
       chassis: [
-        { label: "Шасси", value: "VOLVO FM", highlight: false },
-        { label: "Двигатель", value: "VOLVO D13K", highlight: false },
-        { label: "Мощность", value: "460 л.с.", highlight: false },
-        { label: "Макс. скорость", value: "85 км/ч", highlight: false },
+        { label: "Шасси", value: "SANY" },
+        { label: "Двигатель", value: "Weichai WP12.375E40" },
+        { label: "Мощность", value: "375 л.с." },
+        { label: "Максимальная скорость", value: "90 км/ч" },
       ],
     },
     features: [
-      "Высокая производительность до 180 м³/ч",
-      "Надежная гидравлическая система SANY",
-      "Автоматическая система смазки",
-      "Система контроля давления и температуры",
-      "Эргономичная кабина оператора",
-      "Система автоматической промывки",
+      "Высокая надежность и долговечность",
+      "Экономичный расход топлива",
+      "Простое техническое обслуживание",
+      "Современная система управления",
+      "Низкий уровень шума",
+    ],
+    advantages: [
+      "Прямые поставки с завода SANY",
+      "Полная техническая поддержка",
+      "Гарантия качества",
+      "Конкурентоспособные цены",
+      "Быстрая окупаемость",
+    ],
+    delivery: {
+      location: "Владивосток, Россия",
+      term: "30-45 дней",
+      warranty: "12 месяцев или 2000 м/ч",
+      payment: "Предоплата 30%, остаток при получении",
+    },
+  },
+  "sany-370c-10": {
+    id: "sany-370c-10",
+    model: "SANY SYG5370THB-52",
+    title: "SANY SYG5370THB-52 - Автобетононасос 52м",
+    subtitle: "Универсальный автобетононасос для средних и крупных объектов",
+    image: "/images/pump2.jpg",
+    keySpecs: {
+      height: "52 м",
+      performance: "160 м³/ч",
+      reach: "46 м",
+      weight: "37 т",
+      length: "14.5 м",
+      width: "2.5 м",
+      totalHeight: "3.8 м",
+      depthReach: "38 м",
+      minRadius: "6.5 м",
+      pressure: "8.0 МПа",
+      cylinderDiameter: "200 мм",
+      strokeLength: "2000 мм",
+      chassis: "SANY",
+      engine: "Weichai WP10.336E40",
+      power: "336 л.с.",
+      maxSpeed: "90 км/ч",
+    },
+    specifications: {
+      general: [
+        { label: "Максимальная высота подачи", value: "52 м", highlight: true },
+        { label: "Максимальная производительность", value: "160 м³/ч", highlight: true },
+        { label: "Максимальный горизонтальный вылет", value: "46 м" },
+        { label: "Общая масса", value: "37 т" },
+      ],
+      boom: [
+        { label: "Количество секций стрелы", value: "5" },
+        { label: "Длина стрелы", value: "52 м" },
+        { label: "Угол поворота", value: "365°" },
+        { label: "Время развертывания", value: "7 мин" },
+      ],
+      pump: [
+        { label: "Тип насоса", value: "Поршневой" },
+        { label: "Диаметр цилиндра", value: "200 мм" },
+        { label: "Ход поршня", value: "2000 мм" },
+        { label: "Максимальное давление", value: "8.0 МПа" },
+      ],
+      chassis: [
+        { label: "Шасси", value: "SANY" },
+        { label: "Двигатель", value: "Weichai WP10.336E40" },
+        { label: "Мощность", value: "336 л.с." },
+        { label: "Максимальная скорость", value: "90 км/ч" },
+      ],
+    },
+    features: [
+      "Компактные размеры",
+      "Высокая маневренность",
+      "Надежная конструкция",
+      "Эффективная система охлаждения",
+      "Удобное управление",
     ],
     advantages: [
       "Оптимальное соотношение цена/качество",
+      "Универсальность применения",
       "Низкие эксплуатационные расходы",
-      "Высокая надежность и долговечность",
-      "Простота в обслуживании",
-      "Быстрая окупаемость инвестиций",
-      "Полная техническая поддержка",
+      "Простота обслуживания",
+      "Высокая производительность",
     ],
     delivery: {
-      location: "Владивосток",
+      location: "Владивосток, Россия",
       term: "30-45 дней",
-      warranty: "12 месяцев",
-      payment: "Предоплата 30%, остальное при поставке",
+      warranty: "12 месяцев или 2000 м/ч",
+      payment: "Предоплата 30%, остаток при получении",
     },
   },
-  {
-    id: "sany-370c-10",
-    model: "SANY SYM5230THBF 370C-10",
-    title: "SANY SYM5230THBF 370C-10",
-    subtitle: "Компактный автобетононасос с высотой подачи 37 метров",
-    image: "/images/pump2.jpg",
-    keySpecs: {
-      height: "37м",
-      performance: "125 м³/ч",
-      reach: "33.5м",
-      weight: "28 500 кг",
-    },
-    specifications: {
-      general: [
-        { label: "Длина", value: "12 500 мм", highlight: false },
-        { label: "Ширина", value: "2 500 мм", highlight: false },
-        { label: "Высота", value: "3 800 мм", highlight: false },
-        { label: "Масса", value: "28 500 кг", highlight: true },
-      ],
-      boom: [
-        { label: "Вертикальный вылет", value: "37.0 м", highlight: true },
-        { label: "Горизонтальный вылет", value: "33.5 м", highlight: true },
-        { label: "Глубина подачи", value: "28.5 м", highlight: false },
-        { label: "Минимальный радиус", value: "6.5 м", highlight: false },
-      ],
-      pump: [
-        { label: "Производительность", value: "125 м³/ч", highlight: true },
-        { label: "Давление бетона", value: "8.0 МПа", highlight: false },
-        { label: "Диаметр цилиндра", value: "230 мм", highlight: false },
-        { label: "Длина хода", value: "1800 мм", highlight: false },
-      ],
-      chassis: [
-        { label: "Шасси", value: "ISUZU FVZ", highlight: false },
-        { label: "Двигатель", value: "ISUZU 6UZ1", highlight: false },
-        { label: "Мощность", value: "370 л.с.", highlight: false },
-        { label: "Макс. скорость", value: "90 км/ч", highlight: false },
-      ],
-    },
-    features: [
-      "Компактные размеры для работы в ограниченном пространстве",
-      "Высокая маневренность и проходимость",
-      "Экономичный расход топлива",
-      "Простота управления и обслуживания",
-      "Надежная система охлаждения",
-      "Автоматическая диагностика неисправностей",
-    ],
-    advantages: [
-      "Идеален для малоэтажного строительства",
-      "Низкая стоимость владения",
-      "Быстрая установка и готовность к работе",
-      "Минимальные требования к площадке",
-      "Высокая точность подачи бетона",
-      "Отличная ремонтопригодность",
-    ],
-    delivery: {
-      location: "Владивосток",
-      term: "30-45 дней",
-      warranty: "12 месяцев",
-      payment: "Предоплата 30%, остальное при поставке",
-    },
-  },
-  {
-    id: "sany-710s",
-    model: "SANY SYM5502THBFS 710S",
-    title: "SANY SYM5502THBFS 710S",
-    subtitle: "Мощный автобетононасос с высотой подачи 71 метр",
-    image: "/images/pump3.jpg",
-    keySpecs: {
-      height: "71м",
-      performance: "200 м³/ч",
-      reach: "65м",
-      weight: "42 000 кг",
-    },
-    specifications: {
-      general: [
-        { label: "Длина", value: "16 000 мм", highlight: false },
-        { label: "Ширина", value: "2 500 мм", highlight: false },
-        { label: "Высота", value: "4 200 мм", highlight: false },
-        { label: "Масса", value: "42 000 кг", highlight: true },
-      ],
-      boom: [
-        { label: "Вертикальный вылет", value: "71.0 м", highlight: true },
-        { label: "Горизонтальный вылет", value: "65.0 м", highlight: true },
-        { label: "Глубина подачи", value: "45.0 м", highlight: false },
-        { label: "Минимальный радиус", value: "8.0 м", highlight: false },
-      ],
-      pump: [
-        { label: "Производительность", value: "200 м³/ч", highlight: true },
-        { label: "Давление бетона", value: "9.0 МПа", highlight: false },
-        { label: "Диаметр цилиндра", value: "280 мм", highlight: false },
-        { label: "Длина хода", value: "2300 мм", highlight: false },
-      ],
-      chassis: [
-        { label: "Шасси", value: "VOLVO FMX", highlight: false },
-        { label: "Двигатель", value: "VOLVO D16K", highlight: false },
-        { label: "Мощность", value: "540 л.с.", highlight: false },
-        { label: "Макс. скорость", value: "85 км/ч", highlight: false },
-      ],
-    },
-    features: [
-      "Максимальная высота подачи в классе",
-      "Усиленная конструкция стрелы",
-      "Система активной стабилизации",
-      "Автоматическое управление подачей",
-      "Система мониторинга износа",
-      "Быстрая установка и складывание",
-    ],
-    advantages: [
-      "Идеален для высотного строительства",
-      "Максимальная производительность",
-      "Превосходная надежность",
-      "Минимальное время простоя",
-      "Высокая точность позиционирования",
-      "Полный сервисный пакет",
-    ],
-    delivery: {
-      location: "Владивосток",
-      term: "45-60 дней",
-      warranty: "18 месяцев",
-      payment: "Предоплата 40%, остальное при поставке",
-    },
-  },
-  {
-    id: "sany-750s",
-    model: "SANY SYM5502THBFS 750S",
-    title: "SANY SYM5502THBFS 750S",
-    subtitle: "Флагманский автобетононасос с высотой подачи 75 метров",
-    image: "/images/pump4.jpg",
-    keySpecs: {
-      height: "75м",
-      performance: "220 м³/ч",
-      reach: "68м",
-      weight: "45 000 кг",
-    },
-    specifications: {
-      general: [
-        { label: "Длина", value: "16 500 мм", highlight: false },
-        { label: "Ширина", value: "2 500 мм", highlight: false },
-        { label: "Высота", value: "4 300 мм", highlight: false },
-        { label: "Масса", value: "45 000 кг", highlight: true },
-      ],
-      boom: [
-        { label: "Вертикальный вылет", value: "75.0 м", highlight: true },
-        { label: "Горизонтальный вылет", value: "68.0 м", highlight: true },
-        { label: "Глубина подачи", value: "48.0 м", highlight: false },
-        { label: "Минимальный радиус", value: "8.5 м", highlight: false },
-      ],
-      pump: [
-        { label: "Производительность", value: "220 м³/ч", highlight: true },
-        { label: "Давление бетона", value: "9.5 МПа", highlight: false },
-        { label: "Диаметр цилиндра", value: "300 мм", highlight: false },
-        { label: "Длина хода", value: "2500 мм", highlight: false },
-      ],
-      chassis: [
-        { label: "Шасси", value: "VOLVO FMX", highlight: false },
-        { label: "Двигатель", value: "VOLVO D16K", highlight: false },
-        { label: "Мощность", value: "600 л.с.", highlight: false },
-        { label: "Макс. скорость", value: "85 км/ч", highlight: false },
-      ],
-    },
-    features: [
-      "Рекордная высота подачи 75 метров",
-      "Революционная система управления",
-      "Интеллектуальная диагностика",
-      "Система предиктивного обслуживания",
-      "Автоматическая оптимизация работы",
-      "Дистанционное управление и мониторинг",
-    ],
-    advantages: [
-      "Лидер по техническим характеристикам",
-      "Максимальная эффективность работы",
-      "Инновационные технологии SANY",
-      "Минимальные эксплуатационные расходы",
-      "Превосходная окупаемость",
-      "Премиальная техническая поддержка",
-    ],
-    delivery: {
-      location: "Владивосток",
-      term: "60-75 дней",
-      warranty: "24 месяца",
-      payment: "Предоплата 50%, остальное при поставке",
-    },
-  },
-  {
+  "sany-680c-10": {
     id: "sany-680c-10",
-    model: "SANY SYM5502THBF 680C-10",
-    title: "SANY SYM5502THBF 680C-10",
-    subtitle: "Профессиональный автобетононасос с высотой подачи 68 метров",
+    model: "SANY SYG5680THB-58",
+    title: "SANY SYG5680THB-58 - Автобетононасос 58м",
+    subtitle: "Сбалансированный автобетононасос для различных задач",
     image: "/images/pump5.jpg",
     keySpecs: {
-      height: "68м",
-      performance: "190 м³/ч",
-      reach: "62м",
-      weight: "40 500 кг",
+      height: "58 м",
+      performance: "170 м³/ч",
+      reach: "52 м",
+      weight: "68 т",
+      length: "15.8 м",
+      width: "2.5 м",
+      totalHeight: "3.9 м",
+      depthReach: "42 м",
+      minRadius: "7.0 м",
+      pressure: "8.3 МПа",
+      cylinderDiameter: "220 мм",
+      strokeLength: "2050 мм",
+      chassis: "SANY",
+      engine: "Weichai WP12.360E40",
+      power: "360 л.с.",
+      maxSpeed: "90 км/ч",
     },
     specifications: {
       general: [
-        { label: "Длина", value: "15 500 мм", highlight: false },
-        { label: "Ширина", value: "2 500 мм", highlight: false },
-        { label: "Высота", value: "4 100 мм", highlight: false },
-        { label: "Масса", value: "40 500 кг", highlight: true },
+        { label: "Максимальная высота подачи", value: "58 м", highlight: true },
+        { label: "Максимальная производительность", value: "170 м³/ч", highlight: true },
+        { label: "Максимальный горизонтальный вылет", value: "52 м" },
+        { label: "Общая масса", value: "68 т" },
       ],
       boom: [
-        { label: "Вертикальный вылет", value: "68.0 м", highlight: true },
-        { label: "Горизонтальный вылет", value: "62.0 м", highlight: true },
-        { label: "Глубина подачи", value: "42.0 м", highlight: false },
-        { label: "Минимальный радиус", value: "7.8 м", highlight: false },
+        { label: "Количество секций стрелы", value: "5" },
+        { label: "Длина стрелы", value: "58 м" },
+        { label: "Угол поворота", value: "365°" },
+        { label: "Время развертывания", value: "8 мин" },
       ],
       pump: [
-        { label: "Производительность", value: "190 м³/ч", highlight: true },
-        { label: "Давление бетона", value: "8.8 МПа", highlight: false },
-        { label: "Диаметр цилиндра", value: "270 мм", highlight: false },
-        { label: "Длина хода", value: "2200 мм", highlight: false },
+        { label: "Тип насоса", value: "Поршневой" },
+        { label: "Диаметр цилиндра", value: "220 мм" },
+        { label: "Ход поршня", value: "2050 мм" },
+        { label: "Максимальное давление", value: "8.3 МПа" },
       ],
       chassis: [
-        { label: "Шасси", value: "VOLVO FMX", highlight: false },
-        { label: "Двигатель", value: "VOLVO D13K", highlight: false },
-        { label: "Мощность", value: "500 л.с.", highlight: false },
-        { label: "Макс. скорость", value: "85 км/ч", highlight: false },
+        { label: "Шасси", value: "SANY" },
+        { label: "Двигатель", value: "Weichai WP12.360E40" },
+        { label: "Мощность", value: "360 л.с." },
+        { label: "Максимальная скорость", value: "90 км/ч" },
       ],
     },
     features: [
-      "Оптимальная высота для большинства объектов",
-      "Сбалансированная производительность",
-      "Надежная система управления",
-      "Эффективная система охлаждения",
-      "Удобство обслуживания",
-      "Система контроля качества бетона",
+      "Оптимальное соотношение цена/качество",
+      "Универсальность применения",
+      "Простота управления",
+      "Высокая надежность",
+      "Экономичность эксплуатации",
     ],
     advantages: [
-      "Универсальность применения",
-      "Отличное соотношение цена/производительность",
-      "Проверенная надежность",
-      "Простота эксплуатации",
-      "Быстрая адаптация к объекту",
-      "Комплексная техническая поддержка",
+      "Сбалансированные характеристики",
+      "Подходит для большинства задач",
+      "Умеренное потребление топлива",
+      "Простое обслуживание",
+      "Быстрая окупаемость",
     ],
     delivery: {
-      location: "Владивосток",
-      term: "45-60 дней",
-      warranty: "18 месяцев",
-      payment: "Предоплата 35%, остальное при поставке",
+      location: "Владивосток, Россия",
+      term: "30-45 дней",
+      warranty: "12 месяцев или 2000 м/ч",
+      payment: "Предоплата 30%, остаток при получении",
     },
   },
-  {
+  "sany-620c-10": {
     id: "sany-620c-10",
-    model: "SANY SYM5420THBF 620C-10",
-    title: "SANY SYM5420THBF 620C-10",
-    subtitle: "Надежный автобетононасос с высотой подачи 62 метра",
+    model: "SANY SYG5620THB-48",
+    title: "SANY SYG5620THB-48 - Автобетононасос 48м",
+    subtitle: "Компактный автобетононасос для городского строительства",
     image: "/images/pump6.jpg",
     keySpecs: {
-      height: "62м",
-      performance: "170 м³/ч",
-      reach: "56м",
-      weight: "38 000 кг",
+      height: "48 м",
+      performance: "150 м³/ч",
+      reach: "42 м",
+      weight: "62 т",
+      length: "13.8 м",
+      width: "2.5 м",
+      totalHeight: "3.7 м",
+      depthReach: "35 м",
+      minRadius: "6.0 м",
+      pressure: "7.8 МПа",
+      cylinderDiameter: "190 мм",
+      strokeLength: "1900 мм",
+      chassis: "SANY",
+      engine: "Weichai WP10.310E40",
+      power: "310 л.с.",
+      maxSpeed: "90 км/ч",
     },
     specifications: {
       general: [
-        { label: "Длина", value: "15 000 мм", highlight: false },
-        { label: "Ширина", value: "2 500 мм", highlight: false },
-        { label: "Высота", value: "4 000 мм", highlight: false },
-        { label: "Масса", value: "38 000 кг", highlight: true },
+        { label: "Максимальная высота подачи", value: "48 м", highlight: true },
+        { label: "Максимальная производительность", value: "150 м³/ч", highlight: true },
+        { label: "Максимальный горизонтальный вылет", value: "42 м" },
+        { label: "Общая масса", value: "62 т" },
       ],
       boom: [
-        { label: "Вертикальный вылет", value: "62.0 м", highlight: true },
-        { label: "Горизонтальный вылет", value: "56.0 м", highlight: true },
-        { label: "Глубина подачи", value: "40.0 м", highlight: false },
-        { label: "Минимальный радиус", value: "7.6 м", highlight: false },
+        { label: "Количество секций стрелы", value: "5" },
+        { label: "Длина стрелы", value: "48 м" },
+        { label: "Угол поворота", value: "365°" },
+        { label: "Время развертывания", value: "6 мин" },
       ],
       pump: [
-        { label: "Производительность", value: "170 м³/ч", highlight: true },
-        { label: "Давление бетона", value: "8.6 МПа", highlight: false },
-        { label: "Диаметр цилиндра", value: "250 мм", highlight: false },
-        { label: "Длина хода", value: "2000 мм", highlight: false },
+        { label: "Тип насоса", value: "Поршневой" },
+        { label: "Диаметр цилиндра", value: "190 мм" },
+        { label: "Ход поршня", value: "1900 мм" },
+        { label: "Максимальное давление", value: "7.8 МПа" },
       ],
       chassis: [
-        { label: "Шасси", value: "VOLVO FM", highlight: false },
-        { label: "Двигатель", value: "VOLVO D13K", highlight: false },
-        { label: "Мощность", value: "480 л.с.", highlight: false },
-        { label: "Макс. скорость", value: "85 км/ч", highlight: false },
+        { label: "Шасси", value: "SANY" },
+        { label: "Двигатель", value: "Weichai WP10.310E40" },
+        { label: "Мощность", value: "310 л.с." },
+        { label: "Максимальная скорость", value: "90 км/ч" },
       ],
     },
     features: [
-      "Высокая надежность конструкции",
-      "Эффективная система подачи",
-      "Простое управление и настройка",
-      "Система автоматической очистки",
-      "Контроль параметров в реальном времени",
-      "Быстрая мобилизация на объекте",
+      "Компактность",
+      "Экономичность",
+      "Быстрая окупаемость",
+      "Маневренность в городских условиях",
+      "Простота эксплуатации",
     ],
     advantages: [
-      "Проверенная временем надежность",
-      "Оптимальные эксплуатационные расходы",
-      "Высокая производительность труда",
-      "Простота технического обслуживания",
-      "Отличная маневренность",
-      "Полная сервисная поддержка",
+      "Идеален для городского строительства",
+      "Низкие эксплуатационные расходы",
+      "Высокая мобильность",
+      "Простое обслуживание",
+      "Доступная цена",
     ],
     delivery: {
-      location: "Владивосток",
-      term: "40-55 дней",
-      warranty: "15 месяцев",
-      payment: "Предоплата 35%, остальное при поставке",
+      location: "Владивосток, Россия",
+      term: "30-45 дней",
+      warranty: "12 месяцев или 2000 м/ч",
+      payment: "Предоплата 30%, остаток при получении",
     },
   },
-]
-
-// Функция для чтения данных из файла
-async function readModelsData(): Promise<ModelData[]> {
-  try {
-    // Создаем директорию, если она не существует
-    if (!existsSync(DATA_DIR)) {
-      await mkdir(DATA_DIR, { recursive: true })
-    }
-
-    // Если файл не существует, создаем его с начальными данными
-    if (!existsSync(MODELS_FILE)) {
-      await writeFile(MODELS_FILE, JSON.stringify(initialModels, null, 2), "utf-8")
-      return initialModels
-    }
-
-    // Читаем данные из файла
-    const fileContent = await readFile(MODELS_FILE, "utf-8")
-    return JSON.parse(fileContent)
-  } catch (error) {
-    console.error("Ошибка чтения файла с моделями:", error)
-    return initialModels
-  }
+  "sany-710s": {
+    id: "sany-710s",
+    model: "SANY SYG5710THB-86",
+    title: "SANY SYG5710THB-86 - Автобетононасос 86м",
+    subtitle: "Мощный автобетононасос для высотного строительства",
+    image: "/images/pump3.jpg",
+    keySpecs: {
+      height: "86 м",
+      performance: "200 м³/ч",
+      reach: "78 м",
+      weight: "71 т",
+      length: "18.2 м",
+      width: "2.5 м",
+      totalHeight: "4.2 м",
+      depthReach: "65 м",
+      minRadius: "9.0 м",
+      pressure: "9.0 МПа",
+      cylinderDiameter: "260 мм",
+      strokeLength: "2300 мм",
+      chassis: "SANY",
+      engine: "Weichai WP13.420E40",
+      power: "420 л.с.",
+      maxSpeed: "90 км/ч",
+    },
+    specifications: {
+      general: [
+        { label: "Максимальная высота подачи", value: "86 м", highlight: true },
+        { label: "Максимальная производительность", value: "200 м³/ч", highlight: true },
+        { label: "Максимальный горизонтальный вылет", value: "78 м" },
+        { label: "Общая масса", value: "71 т" },
+      ],
+      boom: [
+        { label: "Количество секций стрелы", value: "6" },
+        { label: "Длина стрелы", value: "86 м" },
+        { label: "Угол поворота", value: "365°" },
+        { label: "Время развертывания", value: "10 мин" },
+      ],
+      pump: [
+        { label: "Тип насоса", value: "Поршневой" },
+        { label: "Диаметр цилиндра", value: "260 мм" },
+        { label: "Ход поршня", value: "2300 мм" },
+        { label: "Максимальное давление", value: "9.0 МПа" },
+      ],
+      chassis: [
+        { label: "Шасси", value: "SANY" },
+        { label: "Двигатель", value: "Weichai WP13.420E40" },
+        { label: "Мощность", value: "420 л.с." },
+        { label: "Максимальная скорость", value: "90 км/ч" },
+      ],
+    },
+    features: [
+      "Максимальная высота подачи",
+      "Высокая производительность",
+      "Премиум качество",
+      "Современные технологии",
+      "Надежность в экстремальных условиях",
+    ],
+    advantages: [
+      "Лидер по высоте подачи",
+      "Подходит для небоскребов",
+      "Максимальная эффективность",
+      "Передовые технологии",
+      "Престижное оборудование",
+    ],
+    delivery: {
+      location: "Владивосток, Россия",
+      term: "30-45 дней",
+      warranty: "12 месяцев или 2000 м/ч",
+      payment: "Предоплата 30%, остаток при получении",
+    },
+  },
+  "sany-750s": {
+    id: "sany-750s",
+    model: "SANY SYG5750THB-72",
+    title: "SANY SYG5750THB-72 - Автобетононасос 72м",
+    subtitle: "Профессиональный автобетононасос для сложных проектов",
+    image: "/images/pump4.jpg",
+    keySpecs: {
+      height: "72 м",
+      performance: "190 м³/ч",
+      reach: "65 м",
+      weight: "75 т",
+      length: "17.5 м",
+      width: "2.5 м",
+      totalHeight: "4.1 м",
+      depthReach: "55 м",
+      minRadius: "8.5 м",
+      pressure: "8.8 МПа",
+      cylinderDiameter: "250 мм",
+      strokeLength: "2200 мм",
+      chassis: "SANY",
+      engine: "Weichai WP12.395E40",
+      power: "395 л.с.",
+      maxSpeed: "90 км/ч",
+    },
+    specifications: {
+      general: [
+        { label: "Максимальная высота подачи", value: "72 м", highlight: true },
+        { label: "Максимальная производительность", value: "190 м³/ч", highlight: true },
+        { label: "Максимальный горизонтальный вылет", value: "65 м" },
+        { label: "Общая масса", value: "75 т" },
+      ],
+      boom: [
+        { label: "Количество секций стрелы", value: "6" },
+        { label: "Длина стрелы", value: "72 м" },
+        { label: "Угол поворота", value: "365°" },
+        { label: "Время развертывания", value: "9 мин" },
+      ],
+      pump: [
+        { label: "Тип насоса", value: "Поршневой" },
+        { label: "Диаметр цилиндра", value: "250 мм" },
+        { label: "Ход поршня", value: "2200 мм" },
+        { label: "Максимальное давление", value: "8.8 МПа" },
+      ],
+      chassis: [
+        { label: "Шасси", value: "SANY" },
+        { label: "Двигатель", value: "Weichai WP12.395E40" },
+        { label: "Мощность", value: "395 л.с." },
+        { label: "Максимальная скорость", value: "90 км/ч" },
+      ],
+    },
+    features: [
+      "Стабильная работа",
+      "Низкий уровень шума",
+      "Долговечность",
+      "Высокая точность подачи",
+      "Профессиональное качество",
+    ],
+    advantages: [
+      "Оптимален для высотного строительства",
+      "Высокая надежность",
+      "Профессиональный уровень",
+      "Отличная управляемость",
+      "Долгосрочная эксплуатация",
+    ],
+    delivery: {
+      location: "Владивосток, Россия",
+      term: "30-45 дней",
+      warranty: "12 месяцев или 2000 м/ч",
+      payment: "Предоплата 30%, остаток при получении",
+    },
+  },
 }
 
-// Функция для записи данных в файл
-async function writeModelsData(models: ModelData[]): Promise<void> {
-  try {
-    // Создаем директорию, если она не существует
-    if (!existsSync(DATA_DIR)) {
-      await mkdir(DATA_DIR, { recursive: true })
-    }
-
-    await writeFile(MODELS_FILE, JSON.stringify(models, null, 2), "utf-8")
-    console.log("✅ Данные моделей успешно сохранены в файл:", MODELS_FILE)
-  } catch (error) {
-    console.error("❌ Ошибка записи файла с моделями:", error)
-    throw error
-  }
-}
-
-// Получение всех моделей или конкретной модели
-export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url)
-  const modelId = searchParams.get("id")
-
-  try {
-    const models = await readModelsData()
-
-    if (modelId) {
-      const model = models.find((m: ModelData) => m.id === modelId)
-      if (!model) {
-        return NextResponse.json({ error: "Модель не найдена" }, { status: 404 })
-      }
-      return NextResponse.json({ success: true, data: model })
-    }
-
-    return NextResponse.json({
-      success: true,
-      data: models.map((m: ModelData) => ({ id: m.id, title: m.title, model: m.model })),
-    })
-  } catch (error) {
-    console.error("Ошибка получения данных:", error)
-    return NextResponse.json({ error: "Ошибка получения данных" }, { status: 500 })
-  }
-}
-
-// Обновление модели
-export async function PUT(request: Request) {
-  try {
-    const updatedModel: ModelData = await request.json()
-
-    // Читаем текущие данные
-    const models = await readModelsData()
-
-    // Находим и обновляем модель
-    const modelIndex = models.findIndex((m) => m.id === updatedModel.id)
-
-    if (modelIndex === -1) {
-      return NextResponse.json({ error: "Модель не найдена" }, { status: 404 })
-    }
-
-    models[modelIndex] = updatedModel
-
-    // Сохраняем обновленные данные
-    await writeModelsData(models)
-
-    console.log("✅ Модель успешно обновлена:", updatedModel.model)
-
-    return NextResponse.json({
-      success: true,
-      message: "Модель успешно обновлена",
-      data: updatedModel,
-    })
-  } catch (error) {
-    console.error("❌ Ошибка обновления модели:", error)
-    return NextResponse.json({ error: "Ошибка обновления модели" }, { status: 500 })
-  }
-}
-
-// Создание новой модели
-export async function POST(request: Request) {
-  try {
-    const newModel: Omit<ModelData, "id"> = await request.json()
-    const modelWithId = {
-      ...newModel,
-      id: newModel.model
-        .toLowerCase()
-        .replace(/\s+/g, "-")
-        .replace(/[^a-z0-9-]/g, ""),
-    }
-
-    // Читаем текущие данные
-    const models = await readModelsData()
-
-    // Проверяем, что модель с таким ID не существует
-    if (models.find((m) => m.id === modelWithId.id)) {
-      return NextResponse.json({ error: "Модель с таким ID уже существует" }, { status: 400 })
-    }
-
-    // Добавляем новую модель
-    models.push(modelWithId)
-
-    // Сохраняем обновленные данные
-    await writeModelsData(models)
-
-    console.log("✅ Новая модель успешно создана:", modelWithId.model)
-
-    return NextResponse.json({
-      success: true,
-      message: "Модель успешно создана",
-      data: modelWithId,
-    })
-  } catch (error) {
-    console.error("❌ Ошибка создания модели:", error)
-    return NextResponse.json({ error: "Ошибка создания модели" }, { status: 500 })
-  }
-}
-
-// Удаление модели
-export async function DELETE(request: Request) {
+export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
-    const modelId = searchParams.get("id")
+    const id = searchParams.get("id")
 
-    if (!modelId) {
-      return NextResponse.json({ error: "ID модели не указан" }, { status: 400 })
+    if (id) {
+      // Возвращаем конкретную модель
+      const model = modelsData[id as keyof typeof modelsData]
+      if (model) {
+        return NextResponse.json({
+          success: true,
+          data: model,
+        })
+      } else {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "Модель не найдена",
+          },
+          { status: 404 },
+        )
+      }
+    } else {
+      // Возвращаем все модели
+      return NextResponse.json({
+        success: true,
+        data: Object.values(modelsData),
+      })
     }
-
-    // Читаем текущие данные
-    const models = await readModelsData()
-
-    // Находим модель для удаления
-    const modelIndex = models.findIndex((m) => m.id === modelId)
-
-    if (modelIndex === -1) {
-      return NextResponse.json({ error: "Модель не найдена" }, { status: 404 })
-    }
-
-    const deletedModel = models[modelIndex]
-    models.splice(modelIndex, 1)
-
-    // Сохраняем обновленные данные
-    await writeModelsData(models)
-
-    console.log("✅ Модель успешно удалена:", deletedModel.model)
-
-    return NextResponse.json({
-      success: true,
-      message: "Модель успешно удалена",
-      data: deletedModel,
-    })
   } catch (error) {
-    console.error("❌ Ошибка удаления модели:", error)
-    return NextResponse.json({ error: "Ошибка удаления модели" }, { status: 500 })
+    console.error("Ошибка API models:", error)
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Внутренняя ошибка сервера",
+      },
+      { status: 500 },
+    )
   }
 }

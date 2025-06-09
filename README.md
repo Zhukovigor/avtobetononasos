@@ -4,6 +4,6 @@
 Сайт автобетононасосы
 
 ## Установка
-```bash
+\`\`\`bash
 npm install
 npm run dev

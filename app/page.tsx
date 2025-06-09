@@ -1,17 +1,17 @@
 import Navigation from "./components/navigation"
 import Hero from "./components/hero"
-import Gallery from "./components/gallery"
 import Portfolio from "./components/portfolio"
+import Gallery from "./components/gallery"
 import Contact from "./components/contact"
 import Footer from "./components/footer"
 
-export default function Page() {
+export default function Home() {
   return (
-    <main className="min-h-screen bg-black text-white">
+    <main className="min-h-screen bg-black">
       <Navigation />
       <Hero />
-      <Gallery />
       <Portfolio />
+      <Gallery />
       <Contact />
       <Footer />
     </main>
