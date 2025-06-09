@@ -49,7 +49,7 @@ export function useAdminAuth(): AdminAuthState {
         return
       }
 
-      // Простая проверка токена (в реальном проекте это должно быть через API)
+      // Проверка токена
       if (adminToken === "admin_access_token_2024") {
         setState({
           isAdmin: true,
@@ -78,8 +78,8 @@ export function useAdminAuth(): AdminAuthState {
 
 // Функция для входа в админ панель
 export function loginAsAdmin(password: string): boolean {
-  // Простая проверка пароля (в реальном проекте это должно быть через API)
-  if (password === "admin2024") {
+  // Проверка пароля
+  if (password === "Zhukovigor65146") {
     const sessionData = {
       loginTime: Date.now(),
       expires: Date.now() + 24 * 60 * 60 * 1000, // 24 часа
@@ -96,5 +96,5 @@ export function loginAsAdmin(password: string): boolean {
 export function logoutAdmin(): void {
   localStorage.removeItem("admin_token")
   localStorage.removeItem("admin_session")
-  window.location.reload()
+  window.location.href = "/" // Перенаправляем на главную страницу
 }

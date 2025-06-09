@@ -2,12 +2,11 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { Shield, Edit3 } from "lucide-react"
+import { Edit3 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/hooks/use-toast"
-import { useAdminAuth, logoutAdmin } from "../hooks/useAdminAuth"
+import { useAdminAuth } from "../hooks/useAdminAuth"
 import ModelEditModal from "./model-edit-modal"
-import AdminLogin from "./admin-login"
 import { Button } from "@/components/ui/button"
 
 interface Model {
@@ -163,10 +162,6 @@ export default function Portfolio() {
     })
   }
 
-  const handleAdminLoginSuccess = () => {
-    setForceUpdate((prev) => prev + 1)
-  }
-
   const handleWhatsAppClick = (modelName: string) => {
     // Отправляем событие в аналитику
     if (typeof window !== "undefined" && window.ym) {
@@ -228,13 +223,8 @@ export default function Portfolio() {
             <div className="mb-8 p-4 bg-zinc-800 rounded-xl border border-zinc-700">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Shield className="w-5 h-5 text-green-400" />
-                  <span className="text-green-400 font-semibold">Режим администратора</span>
-                  <Badge variant="secondary">Активен</Badge>
+                  <Badge variant="secondary">Режим администратора активен</Badge>
                 </div>
-                <Button variant="outline" size="sm" onClick={logoutAdmin}>
-                  Выйти
-                </Button>
               </div>
               <p className="text-gray-400 text-sm mt-2">
                 Вы можете редактировать модели прямо на странице, нажав кнопку "Редактировать" на карточке модели.
@@ -242,11 +232,6 @@ export default function Portfolio() {
             </div>
           )}
 
-          {!isAdmin && !adminLoading && (
-            <div className="mb-8 text-center">
-              <AdminLogin onLoginSuccess={handleAdminLoginSuccess} />
-            </div>
-          )}
           <p className="text-xl text-gray-300 max-w-3xl mx-auto mb-8">
             Широкий выбор автобетононасосов SANY с прямой поставкой из Китая. Гарантия качества, лучшие цены, лизинг 0%.
           </p>

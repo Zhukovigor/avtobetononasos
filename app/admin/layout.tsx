@@ -34,8 +34,11 @@ import {
   Filter,
   Package,
   List,
+  Loader2,
 } from "lucide-react"
 import { Suspense } from "react"
+import { useAdminAuth } from "../hooks/useAdminAuth"
+import { useRouter } from "next/navigation"
 
 // Импортируем конфигурацию для отключения статической генерации
 import "../admin/config"
@@ -213,16 +216,22 @@ const Plus = ({ className }: { className?: string }) => (
   </svg>
 )
 
-export default function AdminLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  const { isAdmin, isLoading } = useAdminAuth()
+  const router = useRouter()
+  const [isRedirecting, setIsRedirecting] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [currentPath, setCurrentPath] = useState("")
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const [notifications, setNotifications] = useState(3)
   const [expandedMenus, setExpandedMenus] = useState<string[]>([])
+
+  useEffect(() => {
+    if (!isLoading && !isAdmin) {
+      setIsRedirecting(true)
+      router.push("/")
+    }
+  }, [isAdmin, isLoading, router])
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -358,6 +367,23 @@ export default function AdminLayout({
         )}
       </div>
     )
+  }
+
+  if (isLoading || isRedirecting) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-100">
+        <div className="text-center">
+          <Loader2 className="h-12 w-12 animate-spin text-blue-600 mx-auto" />
+          <h2 className="mt-4 text-xl font-semibold text-gray-700">
+            {isRedirecting ? "Перенаправление..." : "Проверка доступа..."}
+          </h2>
+        </div>
+      </div>
+    )
+  }
+
+  if (!isAdmin) {
+    return null // Это не должно отображаться, так как мы перенаправляем
   }
 
   return (
